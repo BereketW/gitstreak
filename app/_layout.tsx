@@ -1,24 +1,48 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { useColorScheme } from 'react-native';
+import { AuthProvider, useAuth } from '../context/AuthContext';
+import { useEffect } from 'react';
+import "../global.css";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+function RootNavigator() {
+    const { isAuthenticated, isLoaded } = useAuth();
+    const segments = useSegments();
+    const router = useRouter();
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+    useEffect(() => {
+        if (!isLoaded) return;
+
+        const inAuthGroup = segments[0] === '(tabs)' || segments[0] === 'new-pr';
+
+        if (!isAuthenticated && inAuthGroup) {
+            // Redirect to login screen
+            router.replace('/');
+        } else if (isAuthenticated && !inAuthGroup) {
+            // Redirect to dashboard
+            router.replace('/(tabs)/dashboard');
+        }
+    }, [isAuthenticated, isLoaded, segments]);
+
+    if (!isLoaded) {
+        return null;
+    }
+
+    return (
+        <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="index" options={{ headerShown: false }} />
+            <Stack.Screen name="new-pr" options={{ presentation: 'modal', headerShown: false }} />
+        </Stack>
+    );
+}
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
-
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+    const colorScheme = useColorScheme();
+    return (
+        <AuthProvider>
+            <RootNavigator />
+            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+        </AuthProvider>
+    );
 }
