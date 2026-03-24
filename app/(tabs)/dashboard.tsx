@@ -1,8 +1,8 @@
 import { View, Text, ScrollView, Image, TouchableOpacity, Animated, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons, FontAwesome5, Feather, Octicons } from '@expo/vector-icons';
+import { MaterialIcons, Octicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
-import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
+import { useMemo, useRef, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useGithubUser } from '../../hooks/useGithubUser';
 import { useGithubContributions, ContributionDay } from '../../hooks/useGithubContributions';
@@ -13,12 +13,11 @@ import { BottomSheetModal } from '@gorhom/bottom-sheet';
 
 export default function DashboardScreen() {
     const { colorScheme, toggleColorScheme } = useColorScheme();
-    const { user, loading } = useGithubUser();
+    const { user } = useGithubUser();
     const { logout } = useAuth();
     
     const currentYear = new Date().getFullYear();
     const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-    const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
     const { calendar, streak, loading: calendarLoading, contributionYears } = useGithubContributions(user?.login, selectedYear);
     const [selectedDay, setSelectedDay] = useState<ContributionDay | null>(null);
     
@@ -34,29 +33,6 @@ export default function DashboardScreen() {
     const handlePresentModalPress = useCallback(() => {
         bottomSheetModalRef.current?.present();
     }, []);
-
-    const processedWeeks = useMemo(() => {
-        if (!calendar) return [];
-        let weeks = calendar.weeks;
-        
-        if (selectedMonth !== null) {
-            weeks = weeks.filter(week => 
-                week.contributionDays.some(day => new Date(day.date).getMonth() === selectedMonth)
-            );
-        }
-
-        return weeks.map(week => {
-            const paddedDays: (ContributionDay | null)[] = Array(7).fill(null);
-            week.contributionDays.forEach(day => {
-                const date = new Date(day.date);
-                const dayOfWeek = date.getDay();
-                if (selectedMonth === null || date.getMonth() === selectedMonth) {
-                    paddedDays[dayOfWeek] = day;
-                }
-            });
-            return { paddedDays };
-        });
-    }, [calendar, selectedMonth]);
 
     const headerOpacity = scrollY.interpolate({
         inputRange: [0, 80],
