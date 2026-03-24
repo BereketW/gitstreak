@@ -5,18 +5,23 @@ module.exports = {
     theme: {
         extend: {
             colors: {
-                "primary": "#13ec13",
-                "background-light": "#f6f8f6",
-                "background-dark": "#102210",
+                background: {
+                    dark: '#0d1117',
+                },
+                surface: '#161b22',
+                border: '#30363d',
+                primary: '#3fb950', // GitHub contribution green
+                warning: '#f0883e', // At-risk amber
+                broken: '#6e7681',  // Broken grey
+                text: {
+                    primary: '#e6edf3',
+                    secondary: '#8b949e',
+                }
             },
             fontFamily: {
-                "display": ["Inter", "sans-serif"]
-            },
-            borderRadius: {
-                "lg": "0.5rem",
-                "xl": "0.75rem",
+                mono: ['JetBrainsMono-Bold', 'monospace'], // Suggest installing this font
+                sans: ['Geist-Regular', 'sans-serif'],    // Suggest installing this font
             },
         },
     },
-    plugins: [],
-}
+};
