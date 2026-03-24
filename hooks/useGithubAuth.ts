@@ -52,6 +52,7 @@ export function useGithubAuth() {
                     clientSecret: GITHUB_CONFIG.clientSecret,
                     code,
                     redirectUri,
+                    extraParams: request?.codeVerifier ? { code_verifier: request.codeVerifier } : undefined,
                 },
                 discovery
             ).then((tokenResponse) => {
