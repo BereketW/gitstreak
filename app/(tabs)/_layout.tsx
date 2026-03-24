@@ -1,31 +1,31 @@
 import { Tabs, router } from 'expo-router';
 import { MaterialIcons } from '@expo/vector-icons';
-import { useColorScheme } from 'react-native';
-
-import { View, TouchableOpacity } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useColorScheme, View, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function TabLayout() {
     const colorScheme = useColorScheme();
+    const insets = useSafeAreaInsets();
 
     return (
-        <Tabs
-            screenOptions={{
-                tabBarActiveTintColor: '#13ec13',
-                tabBarInactiveTintColor: '#94a3b8',
-                tabBarStyle: {
-                    backgroundColor: colorScheme === 'dark' ? '#102210' : '#ffffff',
-                    borderTopColor: colorScheme === 'dark' ? '#1e3a1e' : '#e5e5e5',
-                    height: 60,
-                    paddingBottom: 5,
-                },
-                tabBarLabelStyle: {
-                    fontSize: 10,
-                    fontWeight: '500',
-                },
-                headerShown: false,
-            }}
-        >
+        <View style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#0a0f18' : '#ffffff' }}>
+            <Tabs
+                screenOptions={{
+                    tabBarActiveTintColor: '#3fb950',
+                    tabBarInactiveTintColor: '#6e7681',
+                    tabBarStyle: {
+                        backgroundColor: colorScheme === 'dark' ? '#0d1117' : '#ffffff',
+                        borderTopColor: colorScheme === 'dark' ? '#30363d' : '#e5e5e5',
+                        height: 60 + insets.bottom,
+                        paddingBottom: insets.bottom,
+                    },
+                    tabBarLabelStyle: {
+                        fontSize: 10,
+                        fontWeight: '600',
+                    },
+                    headerShown: false,
+                }}
+            >
             <Tabs.Screen
                 name="dashboard"
                 options={{
@@ -85,5 +85,6 @@ export default function TabLayout() {
                 }}
             />
         </Tabs>
+        </View>
     );
 }
