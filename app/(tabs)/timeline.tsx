@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGithubEvents, GithubEvent } from '../../hooks/useGithubEvents';
 import { formatDistanceToNow } from 'date-fns';
+import { ScreenHeader } from '../../components/ScreenHeader';
 
 export default function TimelineScreen() {
     const { events, loading } = useGithubEvents();
@@ -82,39 +83,22 @@ export default function TimelineScreen() {
 
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display text-slate-900 dark:text-slate-100">
-            <View className="flex-1">
-                {/* Header */}
-                <View className="flex-row items-center justify-between mb-8 pt-8 px-6">
-                    <View>
-                        <Text className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Pulse</Text>
-                        <Text className="text-sm text-slate-500 dark:text-slate-400 font-medium mt-1">Your recent developer activity</Text>
+            <ScreenHeader title="Pulse" subtitle="Your recent developer activity" />
+            
+            <ScrollView contentContainerClassName="px-6 pb-32 pt-6" showsVerticalScrollIndicator={false}>
+                {/* The continuous vertical line */}
+                <View className="absolute left-[35px] top-6 bottom-4 w-0.5 bg-slate-200 dark:bg-white/10 rounded-full" />
+                
+                {loading ? (
+                    <View className="py-10 items-center">
+                        <ActivityIndicator size="large" color="#13ec13" />
                     </View>
-                </View>
-
-                {/* Filters */}
-                <View className="mb-6">
-                    <ScrollView horizontal={true} showsHorizontalScrollIndicator={false} contentContainerClassName="flex-row gap-3 px-6 pb-2" className="flex-none">
-                        <View className="bg-slate-900 dark:bg-white px-5 py-2.5 rounded-full shadow-lg">
-                            <Text className="text-white dark:text-slate-900 text-sm font-bold">Everything</Text>
-                        </View>
-                    </ScrollView>
-                </View>
-
-                <ScrollView contentContainerClassName="px-6 pb-32" showsVerticalScrollIndicator={false}>
-                    {/* The continuous vertical line */}
-                    <View className="absolute left-[19px] top-2 bottom-4 w-0.5 bg-slate-200 dark:bg-white/10 rounded-full" />
-                    
-                    {loading ? (
-                        <View className="py-10 items-center">
-                            <ActivityIndicator size="large" color="#13ec13" />
-                        </View>
-                    ) : events.length === 0 ? (
-                        <View className="py-10 items-center bg-white dark:bg-[#111827] rounded-3xl p-5 border border-slate-200 dark:border-white/5">
-                            <Text className="text-slate-500 font-medium text-center">No recent activity found.</Text>
-                        </View>
-                    ) : events.slice(0, 30).filter(e => ["PushEvent", "PullRequestEvent", "PullRequestReviewEvent", "IssuesEvent", "CreateEvent"].includes(e.type)).map(renderEvent)}
-                </ScrollView>
-            </View>
+                ) : events.length === 0 ? (
+                    <View className="py-10 items-center bg-white dark:bg-[#111827] rounded-3xl p-5 border border-slate-200 dark:border-white/5">
+                        <Text className="text-slate-500 font-medium text-center">No recent activity found.</Text>
+                    </View>
+                ) : events.slice(0, 30).filter(e => ["PushEvent", "PullRequestEvent", "PullRequestReviewEvent", "IssuesEvent", "CreateEvent"].includes(e.type)).map(renderEvent)}
+            </ScrollView>
         </SafeAreaView>
     );
 }
