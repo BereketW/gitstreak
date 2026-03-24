@@ -126,47 +126,75 @@ export default function NewPRScreen() {
             const filteredRepos = repos.filter(r => r.full_name.toLowerCase().includes(searchQuery.toLowerCase()));
             
             return (
-                <View className="flex-1">
-                    <View className="px-4 py-3 border-b border-slate-200 dark:border-white/5">
-                        <View className="flex-row items-center bg-slate-100 dark:bg-[#161f2e] rounded-xl px-3 py-2.5">
-                            <Feather name="search" size={18} color="#64748b" />
+                <View className="flex-1 px-4">
+                    <View className="pb-4 pt-2">
+                        <View className="flex-row items-center bg-[#f3f4f6] dark:bg-[#27272a] rounded-xl px-4 py-4">
+                            <Feather name="search" size={20} color={colorScheme === 'dark' ? '#94a3b8' : '#64748b'} />
                             <BottomSheetTextInput 
-                                className="flex-1 ml-2 text-slate-900 dark:text-white font-medium"
+                                className="flex-1 ml-3 text-slate-900 dark:text-white font-medium text-base"
                                 placeholder="Search repositories..."
-                                placeholderTextColor="#64748b"
+                                placeholderTextColor={colorScheme === 'dark' ? '#94a3b8' : '#64748b'}
                                 value={searchQuery}
                                 onChangeText={setSearchQuery}
                             />
                             {searchQuery.length > 0 && (
                                 <TouchableOpacity onPress={() => setSearchQuery('')}>
-                                    <MaterialIcons name="cancel" size={18} color="#64748b" />
+                                    <MaterialIcons name="cancel" size={20} color={colorScheme === 'dark' ? '#94a3b8' : '#64748b'} />
                                 </TouchableOpacity>
                             )}
                         </View>
                     </View>
-                    <BottomSheetScrollView className="flex-1 px-4 pt-2">
+                    <BottomSheetScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}>
                         {reposLoading ? (
                             <ActivityIndicator size="large" color="#13ec13" className="mt-4" />
                         ) : filteredRepos.length === 0 ? (
                             <Text className="text-center text-slate-500 mt-4">No repositories found.</Text>
-                        ) : filteredRepos.map(repo => (
-                            <TouchableOpacity 
-                                key={repo.id} 
-                                className="p-4 mb-2 bg-white dark:bg-[#161f2e] rounded-2xl border border-slate-200 dark:border-white/5 flex-row items-center justify-between active:scale-[0.98]"
-                                onPress={() => {
-                                    setSelectedRepo(repo);
-                                    closeModal();
-                                }}
-                            >
-                                <View className="flex-row items-center gap-3">
-                                    <View className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/10 items-center justify-center border border-indigo-100 dark:border-indigo-500/20">
-                                        <MaterialIcons name="folder" size={16} color="#6366f1" />
-                                    </View>
-                                    <Text className="text-slate-900 dark:text-white font-medium text-base">{repo.full_name}</Text>
-                                </View>
-                                {selectedRepo?.id === repo.id && <MaterialIcons name="check" size={20} color="#13ec13" />}
-                            </TouchableOpacity>
-                        ))}
+                        ) : (
+                            <View className="flex-row flex-wrap px-1" style={{ gap: '4.5%' }}>
+                                {filteredRepos.map(repo => {
+                                    const isSelected = selectedRepo?.id === repo.id;
+                                    return (
+                                        <TouchableOpacity
+                                            key={repo.id}
+                                            onPress={() => {
+                                                setSelectedRepo(repo);
+                                                closeModal();
+                                            }}
+                                            className="w-[30%] mb-5 items-center active:opacity-70"
+                                        >
+                                            <View 
+                                                className={`w-20 h-20 rounded-[20px] items-center justify-center bg-white dark:bg-zinc-900 border shadow-sm ${
+                                                    isSelected 
+                                                    ? 'border-primary border-2 shadow-primary/20' 
+                                                    : 'border-slate-200 dark:border-zinc-800 shadow-black/5'
+                                                }`}
+                                            >
+                                                {isSelected && (
+                                                    <View className="absolute -top-2 -right-2 bg-primary w-6 h-6 rounded-full items-center justify-center z-10 border-2 border-white dark:border-zinc-900 shadow-sm">
+                                                        <MaterialIcons name="check" size={12} color="black" />
+                                                    </View>
+                                                )}
+                                                <Feather 
+                                                    name="book" 
+                                                    size={28} 
+                                                    color={isSelected ? '#13ec13' : (colorScheme === 'dark' ? "#e2e8f0" : "#3b82f6")} 
+                                                />
+                                            </View>
+                                            <Text 
+                                                className={`mt-2 text-[11px] text-center font-bold px-1 ${
+                                                    isSelected 
+                                                    ? 'text-primary dark:text-primary' 
+                                                    : 'text-slate-600 dark:text-zinc-400'
+                                                }`}
+                                                numberOfLines={2}
+                                            >
+                                                {repo.name}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
+                            </View>
+                        )}
                     </BottomSheetScrollView>
                 </View>
             );
@@ -178,45 +206,75 @@ export default function NewPRScreen() {
         const filteredBranches = branches.filter(b => b.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
         return (
-            <View className="flex-1">
-                <View className="px-4 py-3 border-b border-slate-200 dark:border-white/5">
-                    <View className="flex-row items-center bg-slate-100 dark:bg-[#161f2e] rounded-xl px-3 py-2.5">
-                        <Feather name="search" size={18} color="#64748b" />
+            <View className="flex-1 px-4">
+                <View className="pb-4 pt-2">
+                    <View className="flex-row items-center bg-[#f3f4f6] dark:bg-[#27272a] rounded-xl px-4 py-4">
+                        <Feather name="search" size={20} color={colorScheme === 'dark' ? '#94a3b8' : '#64748b'} />
                         <BottomSheetTextInput 
-                            className="flex-1 ml-2 text-slate-900 dark:text-white font-medium"
+                            className="flex-1 ml-3 text-slate-900 dark:text-white font-medium text-base"
                             placeholder="Search branches..."
-                            placeholderTextColor="#64748b"
+                            placeholderTextColor={colorScheme === 'dark' ? '#94a3b8' : '#64748b'}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                         />
                         {searchQuery.length > 0 && (
                             <TouchableOpacity onPress={() => setSearchQuery('')}>
-                                <MaterialIcons name="cancel" size={18} color="#64748b" />
+                                <MaterialIcons name="cancel" size={20} color={colorScheme === 'dark' ? '#94a3b8' : '#64748b'} />
                             </TouchableOpacity>
                         )}
                     </View>
                 </View>
-                <BottomSheetScrollView className="flex-1 px-4 pt-2">
+                <BottomSheetScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}>
                     {branchesLoading ? (
                         <ActivityIndicator size="large" color="#13ec13" className="mt-4" />
                     ) : filteredBranches.length === 0 ? (
                         <Text className="text-center text-slate-500 mt-4">No branches found.</Text>
-                    ) : filteredBranches.map(branch => (
-                        <TouchableOpacity 
-                            key={branch.name} 
-                            className="p-4 mb-2 bg-white dark:bg-[#161f2e] rounded-2xl border border-slate-200 dark:border-white/5 flex-row items-center justify-between active:scale-[0.98]"
-                            onPress={() => {
-                                setBranch(branch as any);
-                                closeModal();
-                            }}
-                        >
-                            <View className="flex-row items-center gap-3">
-                                <MaterialIcons name="call-split" size={18} color="#64748b" />
-                                <Text className="text-slate-900 dark:text-white font-medium text-base">{branch.name}</Text>
-                            </View>
-                            {currentBranch?.name === branch.name && <MaterialIcons name="check" size={20} color="#13ec13" />}
-                        </TouchableOpacity>
-                    ))}
+                    ) : (
+                        <View className="flex-row flex-wrap px-1" style={{ gap: '4.5%' }}>
+                            {filteredBranches.map(branch => {
+                                const isSelected = currentBranch?.name === branch.name;
+                                return (
+                                    <TouchableOpacity
+                                        key={branch.name}
+                                        onPress={() => {
+                                            setBranch(branch as any);
+                                            closeModal();
+                                        }}
+                                        className="w-[30%] mb-5 items-center active:opacity-70"
+                                    >
+                                        <View 
+                                            className={`w-20 h-20 rounded-[20px] items-center justify-center bg-white dark:bg-zinc-900 border shadow-sm ${
+                                                isSelected 
+                                                ? 'border-primary border-2 shadow-primary/20' 
+                                                : 'border-slate-200 dark:border-zinc-800 shadow-black/5'
+                                            }`}
+                                        >
+                                            {isSelected && (
+                                                <View className="absolute -top-2 -right-2 bg-primary w-6 h-6 rounded-full items-center justify-center z-10 border-2 border-white dark:border-zinc-900 shadow-sm">
+                                                    <MaterialIcons name="check" size={12} color="black" />
+                                                </View>
+                                            )}
+                                            <MaterialIcons 
+                                                name="call-split" 
+                                                size={28} 
+                                                color={isSelected ? '#13ec13' : (colorScheme === 'dark' ? "#e2e8f0" : "#10b981")} 
+                                            />
+                                        </View>
+                                        <Text 
+                                            className={`mt-2 text-[11px] text-center font-bold px-1 ${
+                                                isSelected 
+                                                ? 'text-primary dark:text-primary' 
+                                                : 'text-slate-600 dark:text-zinc-400'
+                                            }`}
+                                            numberOfLines={2}
+                                        >
+                                            {branch.name}
+                                        </Text>
+                                    </TouchableOpacity>
+                                );
+                            })}
+                        </View>
+                    )}
                 </BottomSheetScrollView>
             </View>
         );
@@ -249,7 +307,7 @@ export default function NewPRScreen() {
                         </View>
                         <View className="flex-1">
                             <Text className="text-xs font-black text-primary uppercase tracking-widest mb-1">Streak Saver</Text>
-                            <Text className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-snug">Opening this PR secures your 15-day streak. You're crushing it!</Text>
+                            <Text className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-snug">Opening this PR secures your 15-day streak. You&apos;re crushing it!</Text>
                         </View>
                     </View>
 
@@ -403,18 +461,31 @@ export default function NewPRScreen() {
                 index={0}
                 snapPoints={snapPoints}
                 backdropComponent={renderBackdrop}
-                backgroundStyle={{ backgroundColor: colorScheme === 'dark' ? '#0a0f18' : '#ffffff' }}
-                handleIndicatorStyle={{ backgroundColor: colorScheme === 'dark' ? '#334155' : '#cbd5e1' }}
+                handleIndicatorStyle={{
+                    backgroundColor: colorScheme === 'dark' ? '#52525b' : '#d4d4d8',
+                    width: 48,
+                    height: 5,
+                    borderRadius: 10,
+                    marginTop: 8,
+                }}
+                backgroundStyle={{
+                    backgroundColor: colorScheme === 'dark' ? '#18181b' : '#ffffff',
+                    borderTopLeftRadius: 24,
+                    borderTopRightRadius: 24,
+                }}
             >
-                <View className="px-4 py-4 border-b border-slate-200 dark:border-white/10 flex-row justify-between items-center bg-background-light dark:bg-[#0a0f18] z-50">
-                    <Text className="text-xl font-black tracking-tight text-slate-900 dark:text-white">
+                <View className="px-4 pt-2 pb-4 flex-row justify-between items-center z-50">
+                    <Text className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
                         {modalType === 'repo' ? 'Select Repository' : 'Select Branch'}
                     </Text>
-                    <TouchableOpacity onPress={closeModal} className="w-10 h-10 items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 active:scale-95">
-                        <MaterialIcons name="close" size={20} color="#64748b" />
+                    <TouchableOpacity 
+                        className="bg-slate-100 dark:bg-zinc-800 w-8 h-8 rounded-full items-center justify-center active:scale-95"
+                        onPress={closeModal}
+                    >
+                        <MaterialIcons name="close" size={14} color={colorScheme === 'dark' ? "#a1a1aa" : "#64748b"} />
                     </TouchableOpacity>
                 </View>
-                <View className="flex-1 bg-background-light dark:bg-[#0a0f18]">
+                <View className="flex-1">
                     {renderModalContent()}
                 </View>
             </BottomSheetModal>
