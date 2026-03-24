@@ -4,12 +4,12 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useGithubPullRequests, GithubPR } from '../../hooks/useGithubPullRequests';
 import { formatDistanceToNow } from 'date-fns';
+import { ScreenHeader } from '../../components/ScreenHeader';
 
 export default function PullRequestsScreen() {
     const router = useRouter();
     const { prs, loading } = useGithubPullRequests();
 
-    // Helper to extract repo name from repository_url
     const getRepoName = (url: string) => {
         const parts = url.split('/');
         return `${parts[parts.length - 2]}/${parts[parts.length - 1]}`;
@@ -17,21 +17,10 @@ export default function PullRequestsScreen() {
 
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display">
-            {/* Header */}
-            <View className="px-6 pt-6 pb-2">
-                <View className="flex-row justify-between items-center mb-6">
-                    <View className="flex-row items-center bg-primary/10 px-4 py-1.5 rounded-full border border-primary/20 shadow-sm">
-                        <MaterialIcons name="local-fire-department" size={16} color="#13ec13" />
-                        <Text className="text-xs font-black text-primary ml-1.5 uppercase tracking-wider">15 Day Streak</Text>
-                    </View>
-                </View>
-                
-                <View className="flex-row items-end justify-between mb-6">
-                    <Text className="text-4xl font-black tracking-tight text-slate-900 dark:text-white">Review</Text>
-                    <Text className="text-sm font-bold text-slate-500 dark:text-slate-400 mb-1">{loading ? '...' : prs.length} Open</Text>
-                </View>
+            <ScreenHeader title="Pull Requests" subtitle={`${loading ? '...' : prs.length} Open`} />
 
-                {/* Filters */}
+            {/* Filters */}
+            <View className="px-6 pt-4 pb-2">
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-3 pb-2">
                     <TouchableOpacity className="bg-slate-900 dark:bg-white px-5 py-2.5 rounded-full shadow-lg">
                         <Text className="text-white dark:text-slate-900 text-sm font-bold">Created by me</Text>
