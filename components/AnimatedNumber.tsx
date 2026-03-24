@@ -6,7 +6,7 @@ Animated.addWhitelistedNativeProps({ text: true });
 
 const AnimatedTextInput = Animated.createAnimatedComponent(TextInput);
 
-interface AnimatedNumberProps extends Omit<TextInputProps, 'value'> {
+interface AnimatedNumberProps extends TextInputProps {
     value: number;
 }
 
