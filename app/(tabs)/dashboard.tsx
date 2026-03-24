@@ -4,6 +4,8 @@ import { MaterialIcons, FontAwesome5 } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useColorScheme } from 'nativewind';
 import { useMemo } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import { useGithubUser } from '../../hooks/useGithubUser';
 
 // Generates a random GitHub-like contribution graph
 const generateContributionData = () => {
@@ -31,6 +33,8 @@ const generateContributionData = () => {
 export default function DashboardScreen() {
     const { colorScheme, toggleColorScheme } = useColorScheme();
     const contributionData = useMemo(() => generateContributionData(), []);
+    const { user, loading } = useGithubUser();
+    const { logout } = useAuth();
 
     const getLevelColor = (level: number) => {
         if (colorScheme === 'dark') {
@@ -57,15 +61,23 @@ export default function DashboardScreen() {
             {/* Header */}
             <View className="flex-row items-center justify-between px-6 py-4 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md z-30 border-b border-slate-200/50 dark:border-slate-800/50">
                 <View className="flex-row items-center gap-3">
-                    <View className="w-10 h-10 rounded-full border-2 border-primary overflow-hidden">
-                        <Image
-                            source={{ uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuC1yL9d5ATt5-ektmJ92tGphv47ZN27kwMu1npj83bTAOzxms4j03ECEn8uL44d8oHf_0Dh3mSRne2tYju1a127BRZTDd6PcX2f21KIn2JF-gk3Tzb99UyHMkDn7NO54tMwWjzzuQ-Oz6T4HM30zpiPmqI-cPASGdJQqg6BV_LIBbQ5rS343Ord5vPObDXOgBoQRFMHTAwsKurASXf4pZpdNPJRqauTcXSmKevLCxDnUzZjsQpiRf6oL84j0YKMvAxTs4LIORX9FNk" }}
-                            className="w-full h-full object-cover"
-                        />
-                    </View>
+                    <TouchableOpacity onPress={logout} className="w-10 h-10 rounded-full border-2 border-primary overflow-hidden bg-slate-200 dark:bg-slate-800">
+                        {user?.avatar_url ? (
+                            <Image
+                                source={{ uri: user.avatar_url }}
+                                className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            <View className="w-full h-full items-center justify-center">
+                                <MaterialIcons name="person" size={20} color="#94a3b8" />
+                            </View>
+                        )}
+                    </TouchableOpacity>
                     <View>
                         <Text className="text-xs text-slate-500 dark:text-slate-400">Good morning,</Text>
-                        <Text className="font-bold text-lg leading-none text-slate-900 dark:text-slate-100">Alex Rivera</Text>
+                        <Text className="font-bold text-lg leading-none text-slate-900 dark:text-slate-100">
+                            {loading ? 'Loading...' : (user?.name || user?.login || 'Developer')}
+                        </Text>
                     </View>
                 </View>
                 <View className="flex-row items-center gap-3">
@@ -167,17 +179,21 @@ export default function DashboardScreen() {
                 <View className="flex-row gap-4 mb-8">
                     <View className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 flex-1 shadow-sm">
                         <View className="w-10 h-10 bg-blue-100 dark:bg-blue-500/20 rounded-full items-center justify-center mb-3">
-                            <MaterialIcons name="call-merge" size={20} color="#3b82f6" />
+                            <MaterialIcons name="folder" size={20} color="#3b82f6" />
                         </View>
-                        <Text className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">12</Text>
-                        <Text className="text-sm text-slate-500 font-medium mt-1">Open PRs</Text>
+                        <Text className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                            {loading ? '-' : (user?.public_repos || 0)}
+                        </Text>
+                        <Text className="text-sm text-slate-500 font-medium mt-1">Public Repos</Text>
                     </View>
                     <View className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 flex-1 shadow-sm">
                         <View className="w-10 h-10 bg-primary/20 rounded-full items-center justify-center mb-3">
-                            <MaterialIcons name="done-all" size={20} color="#13ec13" />
+                            <MaterialIcons name="people" size={20} color="#13ec13" />
                         </View>
-                        <Text className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">84</Text>
-                        <Text className="text-sm text-slate-500 font-medium mt-1">Commits this week</Text>
+                        <Text className="text-3xl font-black text-slate-900 dark:text-slate-100 tracking-tight">
+                            {loading ? '-' : (user?.followers || 0)}
+                        </Text>
+                        <Text className="text-sm text-slate-500 font-medium mt-1">Followers</Text>
                     </View>
                 </View>
 
