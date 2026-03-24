@@ -1,10 +1,29 @@
-import { View, Text, ScrollView, TouchableOpacity, Image, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons, FontAwesome, Feather } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome, FontAwesome5, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useGithubRepos, GithubRepo } from '../../hooks/useGithubRepos';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function ReposScreen() {
     const router = useRouter();
+    const { repos, loading } = useGithubRepos();
+
+    // Map language to color/icon
+    const getLanguageIcon = (lang: string | null) => {
+        if (!lang) return { icon: <Feather name="code" size={24} color="#64748b" />, bg: "bg-slate-50 dark:bg-slate-800", border: "border-slate-200 dark:border-slate-700" };
+        
+        switch(lang.toLowerCase()) {
+            case 'javascript':
+                return { icon: <MaterialIcons name="javascript" size={32} color="#eab308" />, bg: "bg-yellow-50 dark:bg-yellow-500/10", border: "border-yellow-200/50 dark:border-yellow-500/20" };
+            case 'typescript':
+                return { icon: <Text className="text-blue-500 font-bold text-lg tracking-tighter">TS</Text>, bg: "bg-blue-50 dark:bg-blue-500/10", border: "border-blue-200/50 dark:border-blue-500/20" };
+            case 'python':
+                return { icon: <FontAwesome5 name="python" size={20} color="#3b82f6" />, bg: "bg-blue-50 dark:bg-blue-500/10", border: "border-blue-200/50 dark:border-blue-500/20" };
+            default:
+                return { icon: <FontAwesome name="code" size={20} color="#a855f7" />, bg: "bg-purple-50 dark:bg-purple-500/10", border: "border-purple-200/50 dark:border-purple-500/20" };
+        }
+    }
 
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display">
@@ -13,7 +32,7 @@ export default function ReposScreen() {
                 <View className="flex-row items-center justify-between mb-6">
                     <View>
                         <Text className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Repositories</Text>
-                        <Text className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">14 Active Projects</Text>
+                        <Text className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">{loading ? '...' : repos.length} Active Projects</Text>
                     </View>
                     <TouchableOpacity
                         className="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/20 items-center justify-center shadow-lg shadow-primary/20 active:scale-95 transition-transform"
@@ -40,107 +59,54 @@ export default function ReposScreen() {
 
             {/* Repo List */}
             <ScrollView contentContainerClassName="px-5 pt-4 pb-32 space-y-4" showsVerticalScrollIndicator={false}>
-                
-                {/* Repo Item 1 */}
-                <TouchableOpacity className="bg-white dark:bg-[#111827] rounded-3xl p-5 border border-slate-200 dark:border-white/5 shadow-sm active:scale-[0.98] transition-transform">
-                    <View className="flex-row items-start justify-between mb-4">
-                        <View className="flex-row items-center gap-3 flex-1">
-                            <View className="w-12 h-12 flex items-center justify-center rounded-2xl bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200/50 dark:border-yellow-500/20">
-                                <MaterialIcons name="javascript" size={32} color="#eab308" />
-                            </View>
-                            <View className="flex-1 pr-4">
-                                <Text className="text-lg font-bold text-slate-900 dark:text-white tracking-tight" numberOfLines={1}>react-streak-tracker</Text>
-                                <Text className="text-xs text-slate-500 font-medium mt-0.5">nixitio-labs</Text>
-                            </View>
-                        </View>
-                        <View className="bg-slate-50 dark:bg-[#1f2937] px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/5">
-                            <Text className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Public</Text>
-                        </View>
+                {loading ? (
+                    <View className="py-10 items-center">
+                        <ActivityIndicator size="large" color="#13ec13" />
                     </View>
+                ) : repos.map((repo: GithubRepo) => {
+                    const styling = getLanguageIcon(repo.language);
+                    
+                    return (
+                        <TouchableOpacity key={repo.id} className="bg-white dark:bg-[#111827] rounded-3xl p-5 border border-slate-200 dark:border-white/5 shadow-sm active:scale-[0.98] transition-transform">
+                            <View className="flex-row items-start justify-between mb-4">
+                                <View className="flex-row items-center gap-3 flex-1">
+                                    <View className={`w-12 h-12 flex items-center justify-center rounded-2xl ${styling.bg} border ${styling.border}`}>
+                                        {styling.icon}
+                                    </View>
+                                    <View className="flex-1 pr-4">
+                                        <Text className="text-lg font-bold text-slate-900 dark:text-white tracking-tight" numberOfLines={1}>{repo.name}</Text>
+                                        <Text className="text-xs text-slate-500 font-medium mt-0.5">{repo.owner.login}</Text>
+                                    </View>
+                                </View>
+                                <View className={`${repo.private ? 'bg-primary/10 dark:bg-primary/20 border-primary/20' : 'bg-slate-50 dark:bg-[#1f2937] border-slate-200 dark:border-white/5'} px-3 py-1.5 rounded-full border`}>
+                                    <Text className={`text-[10px] font-bold ${repo.private ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`}>
+                                        {repo.private ? 'Private' : 'Public'}
+                                    </Text>
+                                </View>
+                            </View>
 
-                    <Text className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4" numberOfLines={2}>
-                        A beautiful React Native application to keep your GitHub contribution graph fully green, every single day.
-                    </Text>
+                            {repo.description && (
+                                <Text className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4" numberOfLines={2}>
+                                    {repo.description}
+                                </Text>
+                            )}
 
-                    <View className="flex-row items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
-                        <View className="flex-row items-center gap-4">
-                            <View className="flex-row items-center gap-1.5">
-                                <MaterialIcons name="star-border" size={16} color="#fbbf24" />
-                                <Text className="text-xs font-semibold text-slate-600 dark:text-slate-300">1.2k</Text>
+                            <View className="flex-row items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4 mt-2">
+                                <View className="flex-row items-center gap-4">
+                                    <View className="flex-row items-center gap-1.5">
+                                        <MaterialIcons name="star-border" size={16} color="#fbbf24" />
+                                        <Text className="text-xs font-semibold text-slate-600 dark:text-slate-300">{repo.stargazers_count}</Text>
+                                    </View>
+                                    <View className="flex-row items-center gap-1.5">
+                                        <MaterialIcons name="call-split" size={16} color="#3b82f6" />
+                                        <Text className="text-xs font-semibold text-slate-600 dark:text-slate-300">{repo.forks_count}</Text>
+                                    </View>
+                                </View>
+                                <Text className="text-[11px] text-slate-400 font-medium">Updated {formatDistanceToNow(new Date(repo.updated_at))} ago</Text>
                             </View>
-                            <View className="flex-row items-center gap-1.5">
-                                <MaterialIcons name="call-split" size={16} color="#3b82f6" />
-                                <Text className="text-xs font-semibold text-slate-600 dark:text-slate-300">234</Text>
-                            </View>
-                        </View>
-                        <Text className="text-[11px] text-slate-400 font-medium">Updated 14h ago</Text>
-                    </View>
-                </TouchableOpacity>
-
-                {/* Repo Item 2 */}
-                <TouchableOpacity className="bg-white dark:bg-[#111827] rounded-3xl p-5 border border-slate-200 dark:border-white/5 shadow-sm active:scale-[0.98] transition-transform">
-                    <View className="flex-row items-start justify-between mb-4">
-                        <View className="flex-row items-center gap-3 flex-1">
-                            <View className="w-12 h-12 flex items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200/50 dark:border-blue-500/20">
-                                <Text className="text-blue-500 font-bold text-lg tracking-tighter">TS</Text>
-                            </View>
-                            <View className="flex-1 pr-4">
-                                <Text className="text-lg font-bold text-slate-900 dark:text-white tracking-tight" numberOfLines={1}>api-gateway-v2</Text>
-                                <Text className="text-xs text-slate-500 font-medium mt-0.5">linear-dev</Text>
-                            </View>
-                        </View>
-                        <View className="bg-primary/10 dark:bg-primary/20 px-3 py-1.5 rounded-full border border-primary/20">
-                            <Text className="text-[10px] font-bold text-primary">Private</Text>
-                        </View>
-                    </View>
-
-                    <Text className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4" numberOfLines={2}>
-                        High performance, globally distributed API gateway written in TypeScript using Edge functions.
-                    </Text>
-
-                    <View className="flex-row items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
-                        <View className="flex-row items-center gap-4">
-                            <View className="flex-row items-center gap-1.5">
-                                <MaterialIcons name="star-border" size={16} color="#fbbf24" />
-                                <Text className="text-xs font-semibold text-slate-600 dark:text-slate-300">48</Text>
-                            </View>
-                            <View className="flex-row items-center gap-1.5">
-                                <MaterialIcons name="call-split" size={16} color="#3b82f6" />
-                                <Text className="text-xs font-semibold text-slate-600 dark:text-slate-300">12</Text>
-                            </View>
-                        </View>
-                        <Text className="text-[11px] text-slate-400 font-medium">Updated 2d ago</Text>
-                    </View>
-                </TouchableOpacity>
-
-                {/* Repo Item 3 */}
-                <TouchableOpacity className="bg-white dark:bg-[#111827] rounded-3xl p-5 border border-slate-200 dark:border-white/5 shadow-sm active:scale-[0.98] transition-transform">
-                    <View className="flex-row items-start justify-between mb-4">
-                        <View className="flex-row items-center gap-3 flex-1">
-                            <View className="w-12 h-12 flex items-center justify-center rounded-2xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200/50 dark:border-purple-500/20">
-                                <FontAwesome name="paint-brush" size={20} color="#a855f7" />
-                            </View>
-                            <View className="flex-1 pr-4">
-                                <Text className="text-lg font-bold text-slate-900 dark:text-white tracking-tight" numberOfLines={1}>design-system-core</Text>
-                                <Text className="text-xs text-slate-500 font-medium mt-0.5">nixitio-labs</Text>
-                            </View>
-                        </View>
-                        <View className="bg-slate-50 dark:bg-[#1f2937] px-3 py-1.5 rounded-full border border-slate-200 dark:border-white/5">
-                            <Text className="text-[10px] font-bold text-slate-600 dark:text-slate-300">Public</Text>
-                        </View>
-                    </View>
-
-                    <View className="flex-row items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4">
-                        <View className="flex-row items-center gap-4">
-                            <View className="flex-row items-center gap-1.5">
-                                <MaterialIcons name="star-border" size={16} color="#fbbf24" />
-                                <Text className="text-xs font-semibold text-slate-600 dark:text-slate-300">892</Text>
-                            </View>
-                        </View>
-                        <Text className="text-[11px] text-slate-400 font-medium">Updated 5d ago</Text>
-                    </View>
-                </TouchableOpacity>
-
+                        </TouchableOpacity>
+                    );
+                })}
             </ScrollView>
         </SafeAreaView>
     );
