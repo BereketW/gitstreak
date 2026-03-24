@@ -1,8 +1,85 @@
-import { View, Text, ScrollView } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons, Octicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useGithubEvents, GithubEvent } from '../../hooks/useGithubEvents';
+import { formatDistanceToNow } from 'date-fns';
 
 export default function TimelineScreen() {
+    const { events, loading } = useGithubEvents();
+
+    const renderEvent = (event: GithubEvent, index: number) => {
+        let icon = "commit";
+        let color = "#13ec13";
+        let bgClass = "bg-primary/20 border-primary/50";
+        let title = "Unknown Event";
+        let description = "";
+
+        if (event.type === "PushEvent") {
+            icon = "commit";
+            color = "#13ec13";
+            bgClass = "bg-primary/20 border-primary/50";
+            const commitCount = event.payload.commits ? event.payload.commits.length : 0;
+            const branch = event.payload.ref?.replace('refs/heads/', '') || '';
+            title = `Pushed ${commitCount} commit${commitCount === 1 ? '' : 's'} to ${branch}`;
+            description = event.payload.commits?.[0]?.message || "";
+        } else if (event.type === "PullRequestEvent") {
+            const action = event.payload.action; // opened, closed, etc.
+            icon = action === 'closed' && event.payload.pull_request?.merged ? "call-merge" : "call-split";
+            color = action === 'closed' && event.payload.pull_request?.merged ? "#a855f7" : "#3b82f6";
+            bgClass = action === 'closed' && event.payload.pull_request?.merged ? "bg-purple-100 dark:bg-purple-500/20 border-purple-400 dark:border-purple-500" : "bg-blue-100 dark:bg-blue-500/20 border-blue-400 dark:border-blue-500";
+            title = `${action === 'closed' && event.payload.pull_request?.merged ? 'Merged' : action === 'opened' ? 'Opened' : 'Updated'} pull request #${event.payload.number}`;
+            description = event.payload.pull_request?.title || "";
+        } else if (event.type === "PullRequestReviewEvent" || event.type === "PullRequestReviewCommentEvent") {
+            icon = "visibility";
+            color = "#3b82f6";
+            bgClass = "bg-blue-100 dark:bg-blue-500/20 border-blue-400 dark:border-blue-500";
+            title = `Reviewed pull request #${event.payload.pull_request?.number || ''}`;
+            description = event.payload.review?.body || event.payload.comment?.body || "";
+        } else if (event.type === "IssuesEvent") {
+            icon = "error-outline";
+            color = "#eab308";
+            bgClass = "bg-yellow-100 dark:bg-yellow-500/20 border-yellow-400 dark:border-yellow-500";
+            title = `${event.payload.action} issue #${event.payload.issue?.number}`;
+            description = event.payload.issue?.title || "";
+        } else if (event.type === "CreateEvent") {
+            icon = "add-circle-outline";
+            color = "#13ec13";
+            bgClass = "bg-primary/20 border-primary/50";
+            title = `Created ${event.payload.ref_type} ${event.payload.ref || ''}`;
+            description = event.repo.name;
+        }
+
+        const isLast = index === events.length - 1;
+
+        return (
+            <View key={event.id} className={`relative pl-12 ${isLast ? 'mb-2' : 'mb-8'}`}>
+                <View className={`absolute left-0 top-0 w-10 h-10 rounded-full border-2 items-center justify-center z-10 ${bgClass}`}>
+                    <MaterialIcons name={icon as any} size={20} color={color} />
+                </View>
+                
+                <View className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 rounded-2xl p-4 shadow-sm mt-1">
+                    <View className="flex-row justify-between items-start mb-2">
+                        <View className="flex-row items-center gap-1.5 flex-wrap flex-1 pr-2">
+                            <Text className="text-sm font-bold text-slate-900 dark:text-white">{title}</Text>
+                        </View>
+                        <Text className="text-[10px] text-slate-400 font-medium mt-1">{formatDistanceToNow(new Date(event.created_at))} ago</Text>
+                    </View>
+
+                    <View className="flex-row items-center gap-2 mb-2">
+                        <MaterialIcons name="folder-open" size={14} color="#64748b" />
+                        <Text className="text-xs text-slate-500 font-medium">{event.repo.name}</Text>
+                    </View>
+                    
+                    {description ? (
+                        <View className="bg-slate-50 dark:bg-[#161f2e] rounded-xl p-3 border border-slate-100 dark:border-white/5 mt-1">
+                            <Text className="text-sm text-slate-600 dark:text-slate-300" numberOfLines={2}>{description}</Text>
+                        </View>
+                    ) : null}
+                </View>
+            </View>
+        );
+    };
+
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display text-slate-900 dark:text-slate-100">
             <View className="flex-1">
@@ -20,101 +97,22 @@ export default function TimelineScreen() {
                         <View className="bg-slate-900 dark:bg-white px-5 py-2.5 rounded-full shadow-lg">
                             <Text className="text-white dark:text-slate-900 text-sm font-bold">Everything</Text>
                         </View>
-                        <View className="bg-white dark:bg-[#1f2937] border border-slate-200 dark:border-white/5 px-5 py-2.5 rounded-full shadow-sm">
-                            <Text className="text-slate-600 dark:text-slate-300 text-sm font-medium">Commits</Text>
-                        </View>
-                        <View className="bg-white dark:bg-[#1f2937] border border-slate-200 dark:border-white/5 px-5 py-2.5 rounded-full shadow-sm">
-                            <Text className="text-slate-600 dark:text-slate-300 text-sm font-medium">Reviews</Text>
-                        </View>
                     </ScrollView>
                 </View>
 
                 <ScrollView contentContainerClassName="px-6 pb-32" showsVerticalScrollIndicator={false}>
+                    {/* The continuous vertical line */}
+                    <View className="absolute left-[19px] top-2 bottom-4 w-0.5 bg-slate-200 dark:bg-white/10 rounded-full" />
                     
-                    {/* Date Header */}
-                    <View className="mb-6 mt-2">
-                        <Text className="text-sm font-bold tracking-widest uppercase text-slate-400 dark:text-slate-500">Today</Text>
-                    </View>
-
-                    {/* Timeline Container */}
-                    <View className="relative">
-                        {/* The continuous vertical line */}
-                        <View className="absolute left-[19px] top-2 bottom-4 w-0.5 bg-slate-200 dark:bg-white/10 rounded-full" />
-
-                        {/* Timeline Item 1: Commit */}
-                        <View className="relative pl-12 mb-8">
-                            <View className="absolute left-0 top-0 w-10 h-10 rounded-full bg-primary/20 dark:bg-primary/20 border-2 border-primary/50 items-center justify-center z-10">
-                                <MaterialIcons name="commit" size={20} color="#13ec13" />
-                            </View>
-                            
-                            <View className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 rounded-2xl p-4 shadow-sm mt-1">
-                                <View className="flex-row justify-between items-start mb-2">
-                                    <View className="flex-row items-center gap-1.5">
-                                        <Text className="text-sm font-bold text-slate-900 dark:text-white">Pushed 3 commits</Text>
-                                        <Text className="text-sm text-slate-500">to</Text>
-                                        <Text className="text-sm font-bold text-slate-900 dark:text-white">main</Text>
-                                    </View>
-                                    <Text className="text-[10px] text-slate-400 font-medium">2h ago</Text>
-                                </View>
-                                
-                                <View className="bg-slate-50 dark:bg-[#161f2e] rounded-xl p-3 border border-slate-100 dark:border-white/5 mt-2">
-                                    <View className="flex-row items-center gap-3 mb-2">
-                                        <Text className="text-xs font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded">f4a2e81</Text>
-                                        <Text className="text-sm text-slate-600 dark:text-slate-300" numberOfLines={1}>Refactor auth middleware logic</Text>
-                                    </View>
-                                    <View className="flex-row items-center gap-3 mb-2">
-                                        <Text className="text-xs font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded">a8b9c0d</Text>
-                                        <Text className="text-sm text-slate-600 dark:text-slate-300" numberOfLines={1}>Update dependencies</Text>
-                                    </View>
-                                    <View className="flex-row items-center gap-3">
-                                        <Text className="text-xs font-mono text-primary bg-primary/10 px-1.5 py-0.5 rounded">e1f2g3h</Text>
-                                        <Text className="text-sm text-slate-600 dark:text-slate-300" numberOfLines={1}>Fix typo in README</Text>
-                                    </View>
-                                </View>
-                            </View>
+                    {loading ? (
+                        <View className="py-10 items-center">
+                            <ActivityIndicator size="large" color="#13ec13" />
                         </View>
-
-                        {/* Timeline Item 2: Merged PR */}
-                        <View className="relative pl-12 mb-8">
-                            <View className="absolute left-0 top-0 w-10 h-10 rounded-full bg-purple-100 dark:bg-purple-500/20 border-2 border-purple-400 dark:border-purple-500 items-center justify-center z-10">
-                                <MaterialIcons name="call-merge" size={20} color="#a855f7" />
-                            </View>
-                            
-                            <View className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 rounded-2xl p-4 shadow-sm mt-1">
-                                <View className="flex-row justify-between items-start mb-2">
-                                    <View className="flex-row items-center gap-1.5 flex-wrap flex-1 pr-2">
-                                        <Text className="text-sm font-bold text-slate-900 dark:text-white">Merged pull request</Text>
-                                        <Text className="text-sm font-mono text-purple-600 dark:text-purple-400">#42</Text>
-                                    </View>
-                                    <Text className="text-[10px] text-slate-400 font-medium mt-1">5h ago</Text>
-                                </View>
-                                <Text className="text-base font-bold text-slate-800 dark:text-slate-200 mb-2">Add Dark Mode Support</Text>
-                                <View className="flex-row items-center gap-2">
-                                    <MaterialIcons name="folder-open" size={14} color="#64748b" />
-                                    <Text className="text-xs text-slate-500 font-medium">personal/portfolio-v3</Text>
-                                </View>
-                            </View>
+                    ) : events.length === 0 ? (
+                        <View className="py-10 items-center bg-white dark:bg-[#111827] rounded-3xl p-5 border border-slate-200 dark:border-white/5">
+                            <Text className="text-slate-500 font-medium text-center">No recent activity found.</Text>
                         </View>
-
-                        {/* Timeline Item 3: Review */}
-                        <View className="relative pl-12 mb-2">
-                            <View className="absolute left-0 top-0 w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-500/20 border-2 border-blue-400 dark:border-blue-500 items-center justify-center z-10">
-                                <MaterialIcons name="visibility" size={20} color="#3b82f6" />
-                            </View>
-                            
-                            <View className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 rounded-2xl p-4 shadow-sm mt-1">
-                                <View className="flex-row justify-between items-start mb-2">
-                                    <Text className="text-sm font-bold text-slate-900 dark:text-white">Reviewed pull request</Text>
-                                    <Text className="text-[10px] text-slate-400 font-medium">Yesterday</Text>
-                                </View>
-                                <Text className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Fix navigation bug on Android</Text>
-                                <View className="bg-blue-50 dark:bg-blue-500/10 p-3 rounded-xl border border-blue-100 dark:border-blue-500/20">
-                                    <Text className="text-sm text-blue-800 dark:text-blue-300 italic">"Looks solid! The gesture handler logic is much cleaner now. Approved."</Text>
-                                </View>
-                            </View>
-                        </View>
-                        
-                    </View>
+                    ) : events.slice(0, 30).filter(e => ["PushEvent", "PullRequestEvent", "PullRequestReviewEvent", "IssuesEvent", "CreateEvent"].includes(e.type)).map(renderEvent)}
                 </ScrollView>
             </View>
         </SafeAreaView>
