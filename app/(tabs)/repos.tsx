@@ -1,15 +1,15 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons, FontAwesome, FontAwesome5, Feather } from '@expo/vector-icons';
+import { MaterialIcons, FontAwesome, Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useGithubRepos, GithubRepo } from '../../hooks/useGithubRepos';
 import { formatDistanceToNow } from 'date-fns';
+import { ScreenHeader } from '../../components/ScreenHeader';
 
 export default function ReposScreen() {
     const router = useRouter();
     const { repos, loading } = useGithubRepos();
 
-    // Map language to color/icon
     const getLanguageIcon = (lang: string | null) => {
         if (!lang) return { icon: <Feather name="code" size={24} color="#64748b" />, bg: "bg-slate-50 dark:bg-slate-800", border: "border-slate-200 dark:border-slate-700" };
         
@@ -19,7 +19,7 @@ export default function ReposScreen() {
             case 'typescript':
                 return { icon: <Text className="text-blue-500 font-bold text-lg tracking-tighter">TS</Text>, bg: "bg-blue-50 dark:bg-blue-500/10", border: "border-blue-200/50 dark:border-blue-500/20" };
             case 'python':
-                return { icon: <FontAwesome5 name="python" size={20} color="#3b82f6" />, bg: "bg-blue-50 dark:bg-blue-500/10", border: "border-blue-200/50 dark:border-blue-500/20" };
+                return { icon: <FontAwesome name="code" size={20} color="#3b82f6" />, bg: "bg-blue-50 dark:bg-blue-500/10", border: "border-blue-200/50 dark:border-blue-500/20" };
             default:
                 return { icon: <FontAwesome name="code" size={20} color="#a855f7" />, bg: "bg-purple-50 dark:bg-purple-500/10", border: "border-purple-200/50 dark:border-purple-500/20" };
         }
@@ -27,21 +27,10 @@ export default function ReposScreen() {
 
     return (
         <SafeAreaView edges={['top']} className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display">
-            {/* Header & Search */}
-            <View className="px-6 pt-6 pb-4 bg-background-light/90 dark:bg-[#0a0f18]/90 backdrop-blur-xl z-30 border-b border-slate-200/50 dark:border-white/5">
-                <View className="flex-row items-center justify-between mb-6">
-                    <View>
-                        <Text className="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Repositories</Text>
-                        <Text className="text-sm font-medium text-slate-500 dark:text-slate-400 mt-1">{loading ? '...' : repos.length} Active Projects</Text>
-                    </View>
-                    <TouchableOpacity
-                        className="w-12 h-12 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/20 items-center justify-center shadow-lg shadow-primary/20 active:scale-95 transition-transform"
-                    >
-                        <MaterialIcons name="add" size={26} color="#13ec13" />
-                    </TouchableOpacity>
-                </View>
-
-                {/* Search Bar */}
+            <ScreenHeader title="Repositories" subtitle={`${loading ? '...' : repos.length} Active Projects`} />
+            
+            {/* Search Bar */}
+            <View className="px-6 pt-4 pb-4">
                 <View className="relative">
                     <View className="absolute left-4 top-3.5 z-10">
                         <Feather name="search" size={20} color="#64748b" />
@@ -51,9 +40,6 @@ export default function ReposScreen() {
                         placeholder="Find a repository..."
                         placeholderTextColor="#64748b"
                     />
-                    <TouchableOpacity className="absolute right-4 top-3.5 p-1 bg-slate-100 dark:bg-white/10 rounded-md">
-                        <MaterialIcons name="tune" size={16} color="#64748b" />
-                    </TouchableOpacity>
                 </View>
             </View>
 
