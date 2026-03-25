@@ -1,19 +1,20 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { MaterialIcons, FontAwesome, Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useGithubRepos, GithubRepo } from '../../hooks/useGithubRepos';
+import { Feather, FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
+import { useRouter } from 'expo-router';
+import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenHeader } from '../../components/ScreenHeader';
+import { GithubRepo, useGithubRepos } from '../../hooks/useGithubRepos';
 
 export default function ReposScreen() {
     const router = useRouter();
     const { repos, loading } = useGithubRepos();
+    const insets = useSafeAreaInsets();
 
     const getLanguageIcon = (lang: string | null) => {
         if (!lang) return { icon: <Feather name="code" size={24} color="#64748b" />, bg: "bg-slate-50 dark:bg-slate-800", border: "border-slate-200 dark:border-slate-700" };
-        
-        switch(lang.toLowerCase()) {
+
+        switch (lang.toLowerCase()) {
             case 'javascript':
                 return { icon: <MaterialIcons name="javascript" size={32} color="#eab308" />, bg: "bg-yellow-50 dark:bg-yellow-500/10", border: "border-yellow-200/50 dark:border-yellow-500/20" };
             case 'typescript':
@@ -26,11 +27,11 @@ export default function ReposScreen() {
     }
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display">
+        <View className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display">
             <ScreenHeader title="Repositories" subtitle={`${loading ? '...' : repos.length} Active Projects`} />
-            
+
             {/* Search Bar */}
-            <View className="px-6 pt-4 pb-4">
+            <View className="px-6 pb-4" style={{ paddingTop: Math.max(insets.top, 20) + 70 }}>
                 <View className="relative">
                     <View className="absolute left-4 top-3.5 z-10">
                         <Feather name="search" size={20} color="#64748b" />
@@ -44,14 +45,14 @@ export default function ReposScreen() {
             </View>
 
             {/* Repo List */}
-            <ScrollView contentContainerClassName="px-5 pt-4 pb-32 space-y-4" showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerClassName="px-5 pb-32 space-y-4" showsVerticalScrollIndicator={false}>
                 {loading ? (
                     <View className="py-10 items-center">
                         <ActivityIndicator size="large" color="#13ec13" />
                     </View>
                 ) : repos.map((repo: GithubRepo) => {
                     const styling = getLanguageIcon(repo.language);
-                    
+
                     return (
                         <TouchableOpacity key={repo.id} className="bg-white dark:bg-[#111827] rounded-3xl p-5 border border-slate-200 dark:border-white/5 shadow-sm active:scale-[0.98] transition-transform">
                             <View className="flex-row items-start justify-between mb-4">
@@ -88,12 +89,20 @@ export default function ReposScreen() {
                                         <Text className="text-xs font-semibold text-slate-600 dark:text-slate-300">{repo.forks_count}</Text>
                                     </View>
                                 </View>
-                                <Text className="text-[11px] text-slate-400 font-medium">Updated {formatDistanceToNow(new Date(repo.updated_at))} ago</Text>
+                                <View className="flex-row items-center gap-3">
+                                    <Text className="text-[11px] text-slate-400 font-medium">Updated {formatDistanceToNow(new Date(repo.updated_at))} ago</Text>
+                                    <TouchableOpacity 
+                                        onPress={() => router.push({ pathname: '/streak-assist', params: { owner: repo.owner.login, repo: repo.name } })}
+                                        className="bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-full flex-row items-center gap-1 active:scale-95 transition-transform"
+                                    >
+                                        <Text className="text-primary text-[10px] font-black uppercase tracking-wider">✨ AI Nudge</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </View>
                         </TouchableOpacity>
                     );
                 })}
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }

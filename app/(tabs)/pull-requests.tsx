@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useGithubPullRequests, GithubPR } from '../../hooks/useGithubPullRequests';
@@ -9,6 +9,7 @@ import { ScreenHeader } from '../../components/ScreenHeader';
 export default function PullRequestsScreen() {
     const router = useRouter();
     const { prs, loading } = useGithubPullRequests();
+    const insets = useSafeAreaInsets();
 
     const getRepoName = (url: string) => {
         const parts = url.split('/');
@@ -16,11 +17,11 @@ export default function PullRequestsScreen() {
     };
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display">
+        <View className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display">
             <ScreenHeader title="Pull Requests" subtitle={`${loading ? '...' : prs.length} Open`} />
 
             {/* Filters */}
-            <View className="px-6 pt-4 pb-2">
+            <View className="px-6 pb-2" style={{ paddingTop: Math.max(insets.top, 20) + 70 }}>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row gap-3 pb-2">
                     <TouchableOpacity className="bg-slate-900 dark:bg-white px-5 py-2.5 rounded-full shadow-lg">
                         <Text className="text-white dark:text-slate-900 text-sm font-bold">Created by me</Text>
@@ -31,7 +32,7 @@ export default function PullRequestsScreen() {
                 </ScrollView>
             </View>
 
-            <ScrollView contentContainerClassName="px-5 pt-4 pb-32 space-y-5" showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerClassName="px-5 pb-32 space-y-5" showsVerticalScrollIndicator={false}>
                 {loading ? (
                     <View className="py-10 items-center">
                         <ActivityIndicator size="large" color="#13ec13" />
@@ -103,6 +104,6 @@ export default function PullRequestsScreen() {
                     <MaterialIcons name="add" size={32} color="#000" />
                 </TouchableOpacity>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
