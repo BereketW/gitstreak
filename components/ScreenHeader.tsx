@@ -15,7 +15,7 @@ export const ScreenHeader = ({ title, subtitle }: ScreenHeaderProps) => {
     return (
         <View 
             style={{ paddingTop: Math.max(insets.top, 20) + 16 }}
-            className="absolute top-0 left-0 right-0 flex-row items-center justify-between px-6 pb-4 bg-background-light/90 dark:bg-[#0a0f18]/90 backdrop-blur-xl z-30 border-b border-slate-200/50 dark:border-white/5"
+            className="absolute top-0 left-0 right-0 flex-row items-center justify-between px-6 pb-4 bg-slate-50 dark:bg-background-dark border-b border-slate-200/50 dark:border-border/30 z-30"
         >
             <View>
                 <Text className="text-2xl font-black text-slate-900 dark:text-white">{title}</Text>

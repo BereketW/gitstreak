@@ -27,7 +27,7 @@ export default function ReposScreen() {
     }
 
     return (
-        <View className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display">
+        <View className="flex-1 bg-slate-50 dark:bg-background-dark font-display">
             <ScreenHeader title="Repositories" subtitle={`${loading ? '...' : repos.length} Active Projects`} />
 
             {/* Search Bar */}

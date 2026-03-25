@@ -7,7 +7,7 @@ export default function TabLayout() {
     const { colorScheme } = useColorScheme();
 
     return (
-        <View style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#0a0f18' : '#f8fafc' }}>
+        <View style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#0d1117' : '#f8fafc' }}>
             <Tabs
                 tabBar={(props) => <CustomTabBar {...props} />}
                 screenOptions={{

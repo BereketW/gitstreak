@@ -20,7 +20,7 @@ export default function TimelineScreen() {
             icon = "commit";
             color = "#13ec13";
             bgClass = "bg-primary/20 border-primary/50";
-            const commitCount = event.payload.commits ? event.payload.commits.length : 0;
+            const commitCount = event.payload.size ?? (event.payload.commits ? event.payload.commits.length : 0);
             const branch = event.payload.ref?.replace('refs/heads/', '') || '';
             title = `Pushed ${commitCount} commit${commitCount === 1 ? '' : 's'} to ${branch}`;
             const commits = event.payload.commits || [];
@@ -85,7 +85,7 @@ export default function TimelineScreen() {
     };
 
     return (
-        <View className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display text-slate-900 dark:text-slate-100">
+        <View className="flex-1 bg-slate-50 dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
             <ScreenHeader title="Pulse" subtitle="Your recent developer activity" />
             
             <ScrollView contentContainerClassName="px-6 pb-32" contentContainerStyle={{ paddingTop: Math.max(insets.top, 20) + 80 }} showsVerticalScrollIndicator={false}>

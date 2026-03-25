@@ -17,7 +17,7 @@ export default function PullRequestsScreen() {
     };
 
     return (
-        <View className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display">
+        <View className="flex-1 bg-slate-50 dark:bg-background-dark font-display">
             <ScreenHeader title="Pull Requests" subtitle={`${loading ? '...' : prs.length} Open`} />
 
             {/* Filters */}
@@ -98,7 +98,7 @@ export default function PullRequestsScreen() {
             {/* Floating Action Button */}
             <View className="absolute bottom-6 right-6 z-50 shadow-2xl shadow-primary/40">
                 <TouchableOpacity
-                    className="w-16 h-16 bg-primary rounded-full items-center justify-center active:scale-95 transition-transform border-4 border-background-light dark:border-[#0a0f18]"
+                    className="w-16 h-16 bg-primary rounded-full items-center justify-center active:scale-95 transition-transform border-4 border-slate-50 dark:border-background-dark"
                     onPress={() => router.push('/new-pr')}
                 >
                     <MaterialIcons name="add" size={32} color="#000" />

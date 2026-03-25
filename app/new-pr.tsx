@@ -281,9 +281,9 @@ export default function NewPRScreen() {
     };
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display">
+        <SafeAreaView edges={['top']} className="flex-1 bg-slate-50 dark:bg-background-dark font-display">
             {/* Minimal Header */}
-            <View className="px-6 py-4 flex-row items-center justify-between border-b border-slate-200/50 dark:border-white/5 bg-background-light/90 dark:bg-[#0a0f18]/90 z-50">
+            <View className="px-6 py-4 flex-row items-center justify-between border-b border-slate-200/50 dark:border-white/5 bg-slate-50/90 dark:bg-background-dark/90 z-50">
                 <TouchableOpacity 
                     onPress={() => router.back()} 
                     className="w-10 h-10 items-center justify-center rounded-full bg-slate-100 dark:bg-white/5 active:scale-95"
@@ -439,7 +439,7 @@ export default function NewPRScreen() {
             </KeyboardAvoidingView>
 
             {/* Bottom Action Footer */}
-            <View className="p-6 bg-background-light/90 dark:bg-[#0a0f18]/90 backdrop-blur-xl border-t border-slate-200/50 dark:border-white/5 absolute bottom-0 left-0 right-0">
+            <View className="p-6 bg-slate-50/90 dark:bg-background-dark/90 backdrop-blur-xl border-t border-slate-200/50 dark:border-white/5 absolute bottom-0 left-0 right-0">
                 <TouchableOpacity
                     className={`w-full bg-primary py-4 rounded-2xl flex-row items-center justify-center gap-3 shadow-[0_8px_30px_rgba(19,236,19,0.3)] active:scale-[0.98] transition-transform ${isSubmitting ? 'opacity-70' : ''}`}
                     onPress={handleSubmitPR}
