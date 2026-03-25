@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiCache } from '../utils/cache';
 
 export interface ContributionDay {
     contributionCount: number;
@@ -19,13 +20,22 @@ export function useGithubContributions(username?: string, year?: number) {
     const [calendar, setCalendar] = useState<ContributionCalendar | null>(null);
     const [contributionYears, setContributionYears] = useState<number[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [streak, setStreak] = useState({ current: 0, longest: 0, today: false, active: false });
 
     // Fetch available years once
     useEffect(() => {
         if (!token || !username) return;
+        
         const fetchYears = async () => {
+            const cacheKey = `github_years_${username}`;
+            const cachedYears = apiCache.get<number[]>(cacheKey);
+            if (cachedYears) {
+                setContributionYears(cachedYears);
+                return;
+            }
+
             try {
                 const query = `query { user(login: "${username}") { contributionsCollection { contributionYears } } }`;
                 const res = await fetch('https://api.github.com/graphql', {
@@ -35,7 +45,9 @@ export function useGithubContributions(username?: string, year?: number) {
                 });
                 const json = await res.json();
                 if (json.data?.user?.contributionsCollection?.contributionYears) {
-                    setContributionYears(json.data.user.contributionsCollection.contributionYears);
+                    const years = json.data.user.contributionsCollection.contributionYears;
+                    setContributionYears(years);
+                    apiCache.set(cacheKey, years);
                 }
             } catch (e) {
                 console.error("Failed to fetch contribution years", e);
@@ -44,13 +56,30 @@ export function useGithubContributions(username?: string, year?: number) {
         fetchYears();
     }, [token, username]);
 
-    const fetchContributions = useCallback(async () => {
+    const fetchContributions = useCallback(async (isRefresh = false) => {
         if (!token || !username) {
             setLoading(false);
             return;
         }
 
-        setLoading(true);
+        const cacheKey = `github_contributions_${username}_${year || 'all'}`;
+
+        if (!isRefresh) {
+            const cachedData = apiCache.get<any>(cacheKey);
+            if (cachedData) {
+                setCalendar(cachedData.calendar);
+                setStreak(cachedData.streak);
+                setLoading(false);
+                return;
+            }
+        }
+
+        if (isRefresh) {
+            setRefreshing(true);
+        } else {
+            setLoading(true);
+        }
+
         try {
             let dateFilters = '';
             if (year) {
@@ -136,17 +165,21 @@ export function useGithubContributions(username?: string, year?: number) {
                 }
             }
 
-            setStreak({ 
+            const newStreak = { 
                 current: currentStreak, 
                 longest: longestStreak, 
                 today: todayHasCommit,
                 active: currentStreak > 0
-            });
+            };
+            setStreak(newStreak);
+
+            apiCache.set(cacheKey, { calendar: cal, streak: newStreak });
 
         } catch (err: any) {
             setError(err.message);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     }, [token, username, year]);
 
@@ -154,5 +187,5 @@ export function useGithubContributions(username?: string, year?: number) {
         fetchContributions();
     }, [fetchContributions]);
 
-    return { calendar, streak, loading, error, contributionYears, refresh: fetchContributions };
+    return { calendar, streak, loading, refreshing, error, contributionYears, refresh: () => fetchContributions(true) };
 }

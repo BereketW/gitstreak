@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGithubEvents, GithubEvent } from '../../hooks/useGithubEvents';
@@ -6,7 +6,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ScreenHeader } from '../../components/ScreenHeader';
 
 export default function TimelineScreen() {
-    const { events, loading } = useGithubEvents();
+    const { events, loading, refreshing, refresh } = useGithubEvents();
     const insets = useSafeAreaInsets();
 
     const renderEvent = (event: GithubEvent, index: number) => {
@@ -88,7 +88,12 @@ export default function TimelineScreen() {
         <View className="flex-1 bg-slate-50 dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
             <ScreenHeader title="Pulse" subtitle="Your recent developer activity" />
             
-            <ScrollView contentContainerClassName="px-6 pb-32" contentContainerStyle={{ paddingTop: Math.max(insets.top, 20) + 80 }} showsVerticalScrollIndicator={false}>
+            <ScrollView 
+                contentContainerClassName="px-6 pb-32" 
+                contentContainerStyle={{ paddingTop: Math.max(insets.top, 20) + 80 }} 
+                showsVerticalScrollIndicator={false}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#3fb950" />}
+            >
                 {/* The continuous vertical line */}
                 <View className="absolute left-[35px] bottom-4 w-0.5 bg-slate-200 dark:bg-white/10 rounded-full" style={{ top: Math.max(insets.top, 20) + 80 }} />
                 

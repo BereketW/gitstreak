@@ -2,6 +2,7 @@ import { View, Text, TouchableOpacity } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../context/ThemeContext';
 
 interface ScreenHeaderProps {
     title: string;
@@ -9,7 +10,8 @@ interface ScreenHeaderProps {
 }
 
 export const ScreenHeader = ({ title, subtitle }: ScreenHeaderProps) => {
-    const { colorScheme, toggleColorScheme } = useColorScheme();
+    const { colorScheme } = useColorScheme();
+    const { toggleTheme } = useTheme();
     const insets = useSafeAreaInsets();
     
     return (
@@ -22,7 +24,7 @@ export const ScreenHeader = ({ title, subtitle }: ScreenHeaderProps) => {
                 {subtitle && <Text className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{subtitle}</Text>}
             </View>
             <TouchableOpacity 
-                onPress={toggleColorScheme}
+                onPress={toggleTheme}
                 className="relative p-2.5 rounded-full bg-surface shadow-sm border border-border active:scale-95"
             >
                 <MaterialIcons 

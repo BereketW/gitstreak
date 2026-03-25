@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, Image, RefreshControl } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
@@ -8,7 +8,7 @@ import { ScreenHeader } from '../../components/ScreenHeader';
 
 export default function PullRequestsScreen() {
     const router = useRouter();
-    const { prs, loading } = useGithubPullRequests();
+    const { prs, loading, refreshing, refresh } = useGithubPullRequests();
     const insets = useSafeAreaInsets();
 
     const getRepoName = (url: string) => {
@@ -32,7 +32,11 @@ export default function PullRequestsScreen() {
                 </ScrollView>
             </View>
 
-            <ScrollView contentContainerClassName="px-5 pb-32 space-y-5" showsVerticalScrollIndicator={false}>
+            <ScrollView 
+                contentContainerClassName="px-5 pb-32 space-y-5" 
+                showsVerticalScrollIndicator={false}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#3fb950" />}
+            >
                 {loading ? (
                     <View className="py-10 items-center">
                         <ActivityIndicator size="large" color="#13ec13" />

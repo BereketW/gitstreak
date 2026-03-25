@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Animated, ActivityIndicator, Image } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Animated, ActivityIndicator, Image, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons, Octicons } from '@expo/vector-icons';
 import { useColorScheme } from 'nativewind';
@@ -11,8 +11,11 @@ import * as Haptics from 'expo-haptics';
 import { useGithubEvents } from '../../hooks/useGithubEvents';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
+import { useTheme } from '../../context/ThemeContext';
+
 export default function DashboardScreen() {
-    const { colorScheme, toggleColorScheme } = useColorScheme();
+    const { colorScheme } = useColorScheme();
+    const { toggleTheme } = useTheme();
      const { user } = useGithubUser();
     const { logout } = useAuth();
      
@@ -156,7 +159,7 @@ export default function DashboardScreen() {
                         <MaterialIcons name="auto-awesome" size={20} color="#3fb950" />
                     </TouchableOpacity>
                     <TouchableOpacity 
-                        onPress={toggleColorScheme}
+                        onPress={toggleTheme}
                         className="relative p-2.5 rounded-full bg-white dark:bg-surface shadow-sm border border-slate-200 dark:border-border active:scale-95"
                     >
                         <MaterialIcons 
@@ -177,6 +180,16 @@ export default function DashboardScreen() {
                 showsVerticalScrollIndicator={false}
                 onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
                 scrollEventThrottle={16}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={false} // Prevent default indicator to avoid overlapping custom logic or just use boolean from hooks
+                        onRefresh={() => {
+                            refreshContributions();
+                            refreshEvents();
+                        }}
+                        tintColor={colorScheme === 'dark' ? '#3fb950' : '#3fb950'}
+                    />
+                }
             >
                 <View className={`p-6 mb-8 overflow-hidden shadow-2xl relative ${isGamified ? 'rounded-tl-[32px] rounded-br-[32px] rounded-tr-xl rounded-bl-xl border-2 border-yellow-400 dark:border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 shadow-yellow-500/30' : 'rounded-2xl bg-white dark:bg-surface border border-slate-200 dark:border-border'}`}>
                     <View className={`absolute inset-0 ${isGamified ? 'bg-yellow-400/10 dark:bg-yellow-500/10' : 'bg-green-50 dark:bg-[#0d2b0d]'}`} />

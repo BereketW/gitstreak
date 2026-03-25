@@ -1,14 +1,14 @@
 import { Feather, FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View, RefreshControl } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenHeader } from '../../components/ScreenHeader';
 import { GithubRepo, useGithubRepos } from '../../hooks/useGithubRepos';
 
 export default function ReposScreen() {
     const router = useRouter();
-    const { repos, loading } = useGithubRepos();
+    const { repos, loading, refreshing, refresh } = useGithubRepos();
     const insets = useSafeAreaInsets();
 
     const getLanguageIcon = (lang: string | null) => {
@@ -45,7 +45,11 @@ export default function ReposScreen() {
             </View>
 
             {/* Repo List */}
-            <ScrollView contentContainerClassName="px-5 pb-32 space-y-4" showsVerticalScrollIndicator={false}>
+            <ScrollView 
+                contentContainerClassName="px-5 pb-32 space-y-4" 
+                showsVerticalScrollIndicator={false}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#3fb950" />}
+            >
                 {loading ? (
                     <View className="py-10 items-center">
                         <ActivityIndicator size="large" color="#13ec13" />

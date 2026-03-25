@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGithubUser } from './useGithubUser';
+import { apiCache } from '../utils/cache';
 
 export interface GithubEvent {
     id: string;
@@ -21,11 +22,29 @@ export function useGithubEvents() {
     const { user } = useGithubUser();
     const [events, setEvents] = useState<GithubEvent[]>([]);
     const [loading, setLoading] = useState(true);
+    const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const fetchEvents = useCallback(async () => {
+    const fetchEvents = useCallback(async (isRefresh = false) => {
         if (!token || !user?.login) return;
-        setLoading(true);
+        
+        const cacheKey = `github_events_${user.login}`;
+
+        if (!isRefresh) {
+            const cachedEvents = apiCache.get<GithubEvent[]>(cacheKey);
+            if (cachedEvents) {
+                setEvents(cachedEvents);
+                setLoading(false);
+                return;
+            }
+        }
+
+        if (isRefresh) {
+            setRefreshing(true);
+        } else {
+            setLoading(true);
+        }
+
         try {
             const response = await fetch(`https://api.github.com/users/${user.login}/events`, {
                 headers: {
@@ -60,10 +79,12 @@ export function useGithubEvents() {
             }
 
             setEvents(data);
+            apiCache.set(cacheKey, data);
         } catch (err: any) {
             setError(err.message);
         } finally {
             setLoading(false);
+            setRefreshing(false);
         }
     }, [token, user?.login]);
 
@@ -71,5 +92,5 @@ export function useGithubEvents() {
         fetchEvents();
     }, [fetchEvents]);
 
-    return { events, loading, error, refresh: fetchEvents };
+    return { events, loading, refreshing, error, refresh: () => fetchEvents(true) };
 }
