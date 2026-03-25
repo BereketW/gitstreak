@@ -1,0 +1,83 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg-glow" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#1a3a1a"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </radialGradient>
+    <radialGradient id="flame-inner" cx="50%" cy="70%" r="60%">
+      <stop offset="0%" stop-color="#56d364"/>
+      <stop offset="100%" stop-color="#2ea043"/>
+    </radialGradient>
+    <filter id="soft-glow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- Background rounded square -->
+  <rect width="1024" height="1024" rx="225" fill="url(#bg-glow)"/>
+
+  <!-- Subtle grid texture (terminal feel) -->
+  <g opacity="0.04">
+    <line x1="0" y1="256" x2="1024" y2="256" stroke="#3fb950" stroke-width="1"/>
+    <line x1="0" y1="512" x2="1024" y2="512" stroke="#3fb950" stroke-width="1"/>
+    <line x1="0" y1="768" x2="1024" y2="768" stroke="#3fb950" stroke-width="1"/>
+    <line x1="256" y1="0" x2="256" y2="1024" stroke="#3fb950" stroke-width="1"/>
+    <line x1="512" y1="0" x2="512" y2="1024" stroke="#3fb950" stroke-width="1"/>
+    <line x1="768" y1="0" x2="768" y2="1024" stroke="#3fb950" stroke-width="1"/>
+  </g>
+
+  <!-- Flame / push mark — the hero glyph -->
+  <!-- Outer flame body -->
+  <path d="
+    M512 220
+    C512 220, 620 310, 648 420
+    C668 500, 650 560, 620 600
+    C600 625, 572 638, 572 638
+    C590 590, 574 555, 548 535
+    C548 535, 570 490, 555 448
+    C540 406, 512 390, 512 390
+    C512 390, 484 406, 469 448
+    C454 490, 476 535, 476 535
+    C450 555, 434 590, 452 638
+    C452 638, 424 625, 404 600
+    C374 560, 356 500, 376 420
+    C404 310, 512 220, 512 220
+    Z
+  " fill="url(#flame-inner)" opacity="0.95"/>
+
+  <!-- Inner flame core (brighter center) -->
+  <path d="
+    M512 330
+    C512 330, 568 390, 580 455
+    C590 505, 574 540, 555 560
+    C548 568, 538 574, 538 574
+    C548 548, 540 524, 524 510
+    C524 510, 536 482, 528 458
+    C520 434, 512 424, 512 424
+    C512 424, 504 434, 496 458
+    C488 482, 500 510, 500 510
+    C484 524, 476 548, 486 574
+    C486 574, 476 568, 469 560
+    C450 540, 434 505, 444 455
+    C456 390, 512 330, 512 330
+    Z
+  " fill="#39d353" opacity="0.6"/>
+
+  <!-- Git commit node at base of flame -->
+  <circle cx="512" cy="660" r="32" fill="#0d1117" stroke="#3fb950" stroke-width="4"/>
+  <circle cx="512" cy="660" r="16" fill="#3fb950"/>
+
+  <!-- Git branch lines -->
+  <line x1="512" y1="692" x2="512" y2="740" stroke="#3fb950" stroke-width="4" stroke-linecap="round"/>
+  <!-- Branch left -->
+  <line x1="512" y1="740" x2="432" y2="780" stroke="#3fb950" stroke-width="4" stroke-linecap="round"/>
+  <!-- Branch right -->
+  <line x1="512" y1="740" x2="592" y2="780" stroke="#3fb950" stroke-width="4" stroke-linecap="round"/>
+  <!-- Branch endpoint nodes -->
+  <circle cx="432" cy="780" r="12" fill="#3fb950" opacity="0.6"/>
+  <circle cx="592" cy="780" r="12" fill="#3fb950" opacity="0.6"/>
+
+  <!-- Border ring (very subtle) -->
+  <rect width="1024" height="1024" rx="225" fill="none" stroke="#3fb950" stroke-width="2" opacity="0.12"/>
+</svg>

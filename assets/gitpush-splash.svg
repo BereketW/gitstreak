@@ -1,0 +1,126 @@
+<svg width="390" height="844" viewBox="0 0 390 844" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="splash-glow" cx="50%" cy="42%" r="45%">
+      <stop offset="0%" stop-color="#1a3a1a"/>
+      <stop offset="100%" stop-color="#0d1117"/>
+    </radialGradient>
+    <radialGradient id="flame-g" cx="50%" cy="70%" r="60%">
+      <stop offset="0%" stop-color="#56d364"/>
+      <stop offset="100%" stop-color="#2ea043"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3fb950" stop-opacity="0.15"/>
+      <stop offset="100%" stop-color="#3fb950" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="390" height="844" fill="#0d1117"/>
+  <!-- Radial glow behind logo -->
+  <ellipse cx="195" cy="370" rx="200" ry="200" fill="url(#halo)"/>
+
+  <!-- Subtle dot grid -->
+  <g opacity="0.06" fill="#3fb950">
+    <circle cx="65" cy="65" r="1.5"/><circle cx="130" cy="65" r="1.5"/><circle cx="195" cy="65" r="1.5"/><circle cx="260" cy="65" r="1.5"/><circle cx="325" cy="65" r="1.5"/>
+    <circle cx="65" cy="130" r="1.5"/><circle cx="130" cy="130" r="1.5"/><circle cx="195" cy="130" r="1.5"/><circle cx="260" cy="130" r="1.5"/><circle cx="325" cy="130" r="1.5"/>
+    <circle cx="65" cy="195" r="1.5"/><circle cx="130" cy="195" r="1.5"/><circle cx="195" cy="195" r="1.5"/><circle cx="260" cy="195" r="1.5"/><circle cx="325" cy="195" r="1.5"/>
+    <circle cx="65" cy="580" r="1.5"/><circle cx="130" cy="580" r="1.5"/><circle cx="195" cy="580" r="1.5"/><circle cx="260" cy="580" r="1.5"/><circle cx="325" cy="580" r="1.5"/>
+    <circle cx="65" cy="645" r="1.5"/><circle cx="130" cy="645" r="1.5"/><circle cx="195" cy="645" r="1.5"/><circle cx="260" cy="645" r="1.5"/><circle cx="325" cy="645" r="1.5"/>
+    <circle cx="65" cy="710" r="1.5"/><circle cx="130" cy="710" r="1.5"/><circle cx="195" cy="710" r="1.5"/><circle cx="260" cy="710" r="1.5"/><circle cx="325" cy="710" r="1.5"/>
+    <circle cx="65" cy="775" r="1.5"/><circle cx="130" cy="775" r="1.5"/><circle cx="195" cy="775" r="1.5"/><circle cx="260" cy="775" r="1.5"/><circle cx="325" cy="775" r="1.5"/>
+  </g>
+
+  <!-- === LOGO MARK (centered around 195, 355) === -->
+  <!-- Scale factor: icon is 1024px wide, mark spans ~240px centered at 512 -->
+  <!-- Scale = 140/240 = 0.583, centered at 195,355 -->
+  <g transform="translate(195, 345) scale(0.5)">
+    <!-- Outer flame -->
+    <path d="
+      M0 -180
+      C0 -180, 108 -90, 136 20
+      C156 100, 138 160, 108 200
+      C88 225, 60 238, 60 238
+      C78 190, 62 155, 36 135
+      C36 135, 58 90, 43 48
+      C28 6, 0 -10, 0 -10
+      C0 -10, -28 6, -43 48
+      C-58 90, -36 135, -36 135
+      C-62 155, -78 190, -60 238
+      C-60 238, -88 225, -108 200
+      C-138 160, -156 100, -136 20
+      C-108 -90, 0 -180, 0 -180
+      Z
+    " fill="url(#flame-g)" opacity="0.95"/>
+
+    <!-- Inner flame highlight -->
+    <path d="
+      M0 -90
+      C0 -90, 56 -30, 68 35
+      C78 85, 62 120, 43 140
+      C36 148, 26 154, 26 154
+      C36 128, 28 104, 12 90
+      C12 90, 24 62, 16 38
+      C8 14, 0 4, 0 4
+      C0 4, -8 14, -16 38
+      C-24 62, -12 90, -12 90
+      C-28 104, -36 128, -26 154
+      C-26 154, -36 148, -43 140
+      C-62 120, -78 85, -68 35
+      C-56 -30, 0 -90, 0 -90
+      Z
+    " fill="#39d353" opacity="0.55"/>
+
+    <!-- Git commit circle -->
+    <circle cy="260" r="28" fill="#0d1117" stroke="#3fb950" stroke-width="3.5"/>
+    <circle cy="260" r="13" fill="#3fb950"/>
+
+    <!-- Vertical stem -->
+    <line y1="288" y2="320" stroke="#3fb950" stroke-width="3.5" stroke-linecap="round"/>
+    <!-- Branch lines -->
+    <line x1="0" y1="320" x2="-68" y2="355" stroke="#3fb950" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="0" y1="320" x2="68" y2="355" stroke="#3fb950" stroke-width="3.5" stroke-linecap="round"/>
+    <!-- Branch nodes -->
+    <circle cx="-68" cy="355" r="10" fill="#3fb950" opacity="0.6"/>
+    <circle cx="68" cy="355" r="10" fill="#3fb950" opacity="0.6"/>
+  </g>
+
+  <!-- === WORDMARK === -->
+  <!-- "GitPush" — using monospace feel via letter-spacing and styling -->
+  <text
+    x="195"
+    y="552"
+    text-anchor="middle"
+    font-family="'Courier New', 'JetBrains Mono', monospace"
+    font-size="38"
+    font-weight="700"
+    letter-spacing="4"
+    fill="#e6edf3"
+  >GitPush</text>
+
+  <!-- Tagline -->
+  <text
+    x="195"
+    y="586"
+    text-anchor="middle"
+    font-family="'Courier New', monospace"
+    font-size="13"
+    letter-spacing="3"
+    fill="#3fb950"
+    opacity="0.8"
+  >keep the streak alive</text>
+
+  <!-- Version / status line (subtle, at bottom) -->
+  <text
+    x="195"
+    y="800"
+    text-anchor="middle"
+    font-family="'Courier New', monospace"
+    font-size="11"
+    letter-spacing="2"
+    fill="#8b949e"
+    opacity="0.6"
+  >v1.0.0</text>
+
+  <!-- Bottom safe area line -->
+  <line x1="155" y1="820" x2="235" y2="820" stroke="#30363d" stroke-width="4" stroke-linecap="round"/>
+</svg>
