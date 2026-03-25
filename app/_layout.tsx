@@ -1,7 +1,8 @@
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'react-native';
+import { useColorScheme } from 'nativewind';
 import { AuthProvider, useAuth } from '../context/AuthContext';
+import { ThemeProvider } from '../context/ThemeContext';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -15,7 +16,7 @@ function RootNavigator() {
     useEffect(() => {
         if (!isLoaded) return;
 
-        const inAuthGroup = segments[0] === '(tabs)' || segments[0] === 'new-pr';
+        const inAuthGroup = segments[0] === '(tabs)' || segments[0] === 'new-pr' || segments[0] === 'streak-assist';
 
         if (!isAuthenticated && inAuthGroup) {
             // Redirect to login screen
@@ -40,15 +41,17 @@ function RootNavigator() {
 }
 
 export default function RootLayout() {
-    const colorScheme = useColorScheme();
+    const { colorScheme } = useColorScheme();
     return (
         <GestureHandlerRootView style={{ flex: 1 }}>
-            <AuthProvider>
-                <BottomSheetModalProvider>
-                    <RootNavigator />
-                    <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                </BottomSheetModalProvider>
-            </AuthProvider>
+            <ThemeProvider>
+                <AuthProvider>
+                    <BottomSheetModalProvider>
+                        <RootNavigator />
+                        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                    </BottomSheetModalProvider>
+                </AuthProvider>
+            </ThemeProvider>
         </GestureHandlerRootView>
     );
 }
