@@ -41,6 +41,10 @@ export default function StreakAssistScreen() {
     
     const [scannedLogs, setScannedLogs] = useState<ScannedLog[]>([]);
     const [totalScanned, setTotalScanned] = useState(0);
+    const [integrityScore, setIntegrityScore] = useState<string>('0.0');
+    const [processedTokens, setProcessedTokens] = useState<number>(0);
+    const [throughput, setThroughput] = useState<number>(0);
+    const [analyzingLogStep, setAnalyzingLogStep] = useState<number>(0);
 
     const { repos, loading: reposLoading } = useGithubRepos();
 
@@ -105,6 +109,8 @@ export default function StreakAssistScreen() {
         try {
             setStep('scanning');
             setTotalScanned(0);
+            setScannedLogs([]);
+            setAnalyzingLogStep(0);
             
             const branch = await getDefaultBranch(ownerStr, repoStr, token);
             const tree = await fetchRepoTree(ownerStr, repoStr, branch, token);
@@ -112,56 +118,60 @@ export default function StreakAssistScreen() {
             const validFiles = tree.filter((t: any) => t.type === 'blob' && /\.(ts|tsx|js|jsx)$/.test(t.path));
             if (validFiles.length === 0) throw new Error("No eligible source files found.");
             
-            const allPaths = tree.map((t: any) => t.path).sort(() => Math.random() - 0.5);
-            let scanCount = 0;
-            const tags = [
-                { text: 'READ', color: 'text-primary' }, 
-                { text: 'READ', color: 'text-primary' }, 
-                { text: 'READ', color: 'text-primary' }, 
-                { text: 'AI_PROC', color: 'text-[#d5bbff]' }, 
-                { text: 'WARN', color: 'text-amber-400' }
-            ];
+            setIntegrityScore(((validFiles.length / tree.length) * 100).toFixed(1));
+
+            const allPaths = tree.map((t: any) => ({
+                path: t.path, 
+                size: t.size ? (t.size / 1024).toFixed(1) : '0.1',
+                type: t.type.toUpperCase()
+            })).sort(() => Math.random() - 0.5);
             
             setScannedLogs([{
                 time: new Date().toLocaleTimeString('en-US', { hour12: false }),
                 tag: 'INIT_SCAN',
                 tagColor: 'text-slate-500',
-                path: 'Indexing local tree...',
+                path: `Indexing ${tree.length} files...`,
                 size: ''
             }]);
 
-            const scanInterval = setInterval(() => {
-                const randomTag = tags[Math.floor(Math.random() * tags.length)];
-                const kb = (Math.random() * 20 + 0.5).toFixed(1);
-                
-                const newLog = {
+            const chunkSize = Math.max(1, Math.ceil(allPaths.length / 20));
+            for (let i = 0; i < allPaths.length; i += chunkSize) {
+                const chunk = allPaths.slice(i, i + chunkSize);
+                const newLogs = chunk.map((file: any) => ({
                     time: new Date().toLocaleTimeString('en-US', { hour12: false }),
-                    tag: randomTag.text,
-                    tagColor: randomTag.color,
-                    path: allPaths[scanCount] || 'unknown_file',
-                    size: `-- ${kb}kb`
-                };
+                    tag: file.type,
+                    tagColor: 'text-primary',
+                    path: file.path,
+                    size: `-- ${file.size}kb`
+                }));
+                
+                setScannedLogs(prev => [...newLogs, ...prev].slice(0, 50));
+                setTotalScanned(prev => prev + chunk.length);
+                await new Promise(r => setTimeout(r, 60)); 
+            }
 
-                setScannedLogs(prev => [newLog, ...prev].slice(0, 50));
-                setTotalScanned(prev => prev + Math.floor(Math.random() * 5 + 1));
-                scanCount++;
-                if (scanCount >= Math.min(allPaths.length, 60)) {
-                    clearInterval(scanInterval);
-                }
-            }, 80);
-
-            await new Promise(resolve => setTimeout(resolve, 4500));
-            
             const file = validFiles[Math.floor(Math.random() * Math.min(validFiles.length, 15))];
             setTargetFile(file.path);
 
-            const { content } = await fetchFileContent(ownerStr, repoStr, file.path, token);
-
             setStep('analyzing');
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            
+            setAnalyzingLogStep(1);
+            const startTime = Date.now();
+            const { content } = await fetchFileContent(ownerStr, repoStr, file.path, token);
+            
+            setProcessedTokens(Math.floor(content.length / 4));
+            setAnalyzingLogStep(2);
+            
             const result = await getAIProposal(content);
+            const endTime = Date.now();
+            setThroughput(Math.round(content.length / ((endTime - startTime) / 1000 || 1)));
+            setAnalyzingLogStep(3);
+            
             setDiff(result.diff);
             setFinalContent(result.full_content);
+            await new Promise(r => setTimeout(r, 600)); 
+            
             setStep('review');
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             
@@ -275,7 +285,7 @@ export default function StreakAssistScreen() {
                                 <View className="items-end">
                                     <Text className="text-[10px] uppercase tracking-widest font-black text-slate-500 dark:text-[#bdcab8] mb-1">Integrity Score</Text>
                                     <View className="flex-row items-baseline gap-1">
-                                        <Text className="text-2xl font-black font-mono text-purple-600 dark:text-[#d5bbff]">98.4</Text>
+                                        <Text className="text-2xl font-black font-mono text-purple-600 dark:text-[#d5bbff]">{integrityScore}</Text>
                                         <Text className="text-sm font-black font-mono text-purple-600/60 dark:text-[#d5bbff]/60 mb-0.5">%</Text>
                                     </View>
                                     <Text className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase mt-0.5">optimal</Text>
@@ -351,15 +361,15 @@ export default function StreakAssistScreen() {
                             <View className="flex-row justify-between w-full px-2 mb-2 z-20">
                                 <View>
                                     <Text className="text-[10px] uppercase tracking-widest font-black text-slate-500 dark:text-[#bdcab8] mb-1">Processed Tokens</Text>
-                                    <Text className="text-2xl font-black font-mono text-slate-900 dark:text-[#dfe2eb]">1,248k</Text>
+                                    <Text className="text-2xl font-black font-mono text-slate-900 dark:text-[#dfe2eb]">{processedTokens}</Text>
                                     <View className="w-24 h-1 bg-slate-200 dark:bg-[#31353c]/40 rounded-full mt-1.5 overflow-hidden">
-                                        <View className="h-full bg-purple-500 dark:bg-[#d5bbff] w-[85%] rounded-full" />
+                                        <View className="h-full bg-purple-500 dark:bg-[#d5bbff] w-[100%] rounded-full" />
                                     </View>
-                                    <Text className="text-[8px] font-bold text-slate-500 dark:text-[#d5bbff]/60 uppercase mt-1">Throughput 85%</Text>
+                                    <Text className="text-[8px] font-bold text-slate-500 dark:text-[#d5bbff]/60 uppercase mt-1">Throughput {throughput > 0 ? throughput : '...'} bps</Text>
                                 </View>
                                 <View className="items-end">
-                                    <Text className="text-[10px] uppercase tracking-widest font-black text-slate-500 dark:text-[#bdcab8] mb-1">Temperature</Text>
-                                    <Text className="text-2xl font-black font-mono text-slate-900 dark:text-[#dfe2eb]">0.72</Text>
+                                    <Text className="text-[10px] uppercase tracking-widest font-black text-slate-500 dark:text-[#bdcab8] mb-1">Model Temp</Text>
+                                    <Text className="text-2xl font-black font-mono text-slate-900 dark:text-[#dfe2eb]">0.70</Text>
                                     <View className="flex-row gap-0.5 mt-1.5 w-16 justify-end">
                                         <View className="h-1 flex-1 bg-green-500 dark:bg-[#67df70] rounded-full" />
                                         <View className="h-1 flex-1 bg-green-500 dark:bg-[#67df70] rounded-full" />
@@ -410,23 +420,23 @@ export default function StreakAssistScreen() {
                                 <View className="space-y-3 bg-white/40 dark:bg-[#181c22]/30 p-4 rounded-2xl border border-slate-200/50 dark:border-white/5">
                                     <View className="flex-row items-center gap-3">
                                         <Text className="text-slate-400 dark:text-[#d5bbff]/30 font-mono text-[11px]">01</Text>
-                                        <MaterialIcons name="check-circle" size={14} color={colorScheme === 'dark' ? '#67df70' : '#22c55e'} />
-                                        <Text className="text-slate-600 dark:text-[#bdcab8]/90 font-mono text-[11px] flex-1">Initializing neural engine core...</Text>
+                                        {analyzingLogStep >= 1 ? <MaterialIcons name="check-circle" size={14} color={colorScheme === 'dark' ? '#67df70' : '#22c55e'} /> : <ActivityIndicator size="small" color={colorScheme === 'dark' ? '#d5bbff' : '#a855f7'} className="scale-[0.6]" />}
+                                        <Text className={`font-mono text-[11px] flex-1 ${analyzingLogStep >= 1 ? 'text-slate-600 dark:text-[#bdcab8]/90' : 'text-slate-900 dark:text-[#dfe2eb] font-semibold'}`}>Fetching file content from GitHub API...</Text>
                                     </View>
-                                    <View className="flex-row items-center gap-3">
+                                    <View className={`flex-row items-center gap-3 ${analyzingLogStep < 1 ? 'opacity-30' : ''}`}>
                                         <Text className="text-slate-400 dark:text-[#d5bbff]/30 font-mono text-[11px]">02</Text>
-                                        <MaterialIcons name="check-circle" size={14} color={colorScheme === 'dark' ? '#67df70' : '#22c55e'} />
-                                        <Text className="text-slate-600 dark:text-[#bdcab8]/90 font-mono text-[11px] flex-1">Fetching blob: <Text className="bg-slate-200/50 dark:bg-[#31353c]/50 px-1 py-0.5 rounded text-[10px]" numberOfLines={1}>sha256:7f... </Text></Text>
+                                        {analyzingLogStep >= 2 ? <MaterialIcons name="check-circle" size={14} color={colorScheme === 'dark' ? '#67df70' : '#22c55e'} /> : (analyzingLogStep === 1 ? <ActivityIndicator size="small" color={colorScheme === 'dark' ? '#d5bbff' : '#a855f7'} className="scale-[0.6]" /> : <Text className="text-slate-400 dark:text-[#bdcab8] px-0.5">—</Text>)}
+                                        <Text className={`font-mono text-[11px] flex-1 ${analyzingLogStep >= 2 ? 'text-slate-600 dark:text-[#bdcab8]/90' : (analyzingLogStep === 1 ? 'text-slate-900 dark:text-[#dfe2eb] font-semibold' : 'text-slate-500 dark:text-[#bdcab8]')}`}>Analyzing tokens & architecture</Text>
                                     </View>
-                                    <View className="flex-row items-center gap-3">
+                                    <View className={`flex-row items-center gap-3 ${analyzingLogStep < 2 ? 'opacity-30' : ''}`}>
                                         <Text className="text-purple-500 dark:text-[#d5bbff]/60 font-mono text-[11px]">03</Text>
-                                        <ActivityIndicator size="small" color={colorScheme === 'dark' ? '#d5bbff' : '#a855f7'} className="scale-[0.6]" />
-                                        <Text className="text-slate-900 dark:text-[#dfe2eb] font-semibold font-mono text-[11px] flex-1">Generating proposal for logic...</Text>
+                                        {analyzingLogStep >= 3 ? <MaterialIcons name="check-circle" size={14} color={colorScheme === 'dark' ? '#67df70' : '#22c55e'} /> : (analyzingLogStep === 2 ? <ActivityIndicator size="small" color={colorScheme === 'dark' ? '#d5bbff' : '#a855f7'} className="scale-[0.6]" /> : <Text className="text-slate-400 dark:text-[#bdcab8] px-0.5">—</Text>)}
+                                        <Text className={`font-mono text-[11px] flex-1 ${analyzingLogStep >= 3 ? 'text-slate-600 dark:text-[#bdcab8]/90' : (analyzingLogStep === 2 ? 'text-slate-900 dark:text-[#dfe2eb] font-semibold' : 'text-slate-500 dark:text-[#bdcab8]')}`}>Generating proposal via Gemini 1.5 Pro</Text>
                                     </View>
-                                    <View className="flex-row items-center gap-3 opacity-30 mt-1">
+                                    <View className={`flex-row items-center gap-3 ${analyzingLogStep < 3 ? 'opacity-30' : ''} mt-1`}>
                                         <Text className="text-slate-400 dark:text-[#d5bbff]/30 font-mono text-[11px]">04</Text>
-                                        <Text className="text-slate-400 dark:text-[#bdcab8] px-0.5">—</Text>
-                                        <Text className="text-slate-500 dark:text-[#bdcab8] font-mono text-[11px] flex-1">Finalizing integrity check</Text>
+                                        {analyzingLogStep >= 3 ? <MaterialIcons name="check-circle" size={14} color={colorScheme === 'dark' ? '#67df70' : '#22c55e'} /> : <Text className="text-slate-400 dark:text-[#bdcab8] px-0.5">—</Text>}
+                                        <Text className={`font-mono text-[11px] flex-1 ${analyzingLogStep >= 3 ? 'text-slate-600 dark:text-[#bdcab8]/90' : 'text-slate-500 dark:text-[#bdcab8]'}`}>Finalizing diff & JSON integrity</Text>
                                     </View>
                                 </View>
                             </View>
