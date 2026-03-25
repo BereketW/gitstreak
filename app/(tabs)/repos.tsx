@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { ActivityIndicator, ScrollView, Text, TextInput, TouchableOpacity, View, RefreshControl } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenHeader } from '../../components/ScreenHeader';
+import { Skeleton } from '../../components/Skeleton';
 import { GithubRepo, useGithubRepos } from '../../hooks/useGithubRepos';
 
 export default function ReposScreen() {
@@ -51,9 +52,32 @@ export default function ReposScreen() {
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#3fb950" />}
             >
                 {loading ? (
-                    <View className="py-10 items-center">
-                        <ActivityIndicator size="large" color="#13ec13" />
-                    </View>
+                    Array.from({ length: 6 }).map((_, idx) => (
+                        <View key={idx} className="bg-white dark:bg-[#111827] rounded-3xl p-5 border border-slate-200 dark:border-white/5 shadow-sm mb-4">
+                            <View className="flex-row items-start justify-between mb-4">
+                                <View className="flex-row items-center gap-3 flex-1">
+                                    <Skeleton className="w-12 h-12 rounded-2xl" />
+                                    <View className="flex-1 pr-4 gap-2">
+                                        <Skeleton className="w-3/4 h-5 rounded-md" />
+                                        <Skeleton className="w-1/2 h-3 rounded-md" />
+                                    </View>
+                                </View>
+                                <Skeleton className="w-16 h-6 rounded-full" />
+                            </View>
+                            <Skeleton className="w-full h-4 rounded-md mb-2" />
+                            <Skeleton className="w-5/6 h-4 rounded-md mb-4" />
+                            <View className="flex-row items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4 mt-2">
+                                <View className="flex-row items-center gap-4">
+                                    <Skeleton className="w-10 h-4 rounded-md" />
+                                    <Skeleton className="w-10 h-4 rounded-md" />
+                                </View>
+                                <View className="flex-row items-center gap-3">
+                                    <Skeleton className="w-20 h-3 rounded-md" />
+                                    <Skeleton className="w-20 h-7 rounded-full" />
+                                </View>
+                            </View>
+                        </View>
+                    ))
                 ) : repos.map((repo: GithubRepo) => {
                     const styling = getLanguageIcon(repo.language);
 

@@ -9,6 +9,8 @@ import { useGithubRepos, GithubRepo } from '../hooks/useGithubRepos';
 import { useGithubBranches, GithubBranch } from '../hooks/useGithubBranches';
 import { useAuth } from '../context/AuthContext';
 
+import { Skeleton } from '../components/Skeleton';
+
 export default function NewPRScreen() {
     const router = useRouter();
     const { token } = useAuth();
@@ -146,7 +148,14 @@ export default function NewPRScreen() {
                     </View>
                     <BottomSheetScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}>
                         {reposLoading ? (
-                            <ActivityIndicator size="large" color="#13ec13" className="mt-4" />
+                            <View className="flex-row flex-wrap px-1" style={{ gap: '4.5%' }}>
+                                {Array.from({ length: 6 }).map((_, idx) => (
+                                    <View key={idx} className="w-[30%] mb-5 items-center">
+                                        <Skeleton className="w-20 h-20 rounded-[20px] mb-2" />
+                                        <Skeleton className="w-16 h-3 rounded-sm" />
+                                    </View>
+                                ))}
+                            </View>
                         ) : filteredRepos.length === 0 ? (
                             <Text className="text-center text-slate-500 mt-4">No repositories found.</Text>
                         ) : (
@@ -226,7 +235,14 @@ export default function NewPRScreen() {
                 </View>
                 <BottomSheetScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40, paddingTop: 10 }}>
                     {branchesLoading ? (
-                        <ActivityIndicator size="large" color="#13ec13" className="mt-4" />
+                        <View className="flex-row flex-wrap px-1" style={{ gap: '4.5%' }}>
+                            {Array.from({ length: 6 }).map((_, idx) => (
+                                <View key={idx} className="w-[30%] mb-5 items-center">
+                                    <Skeleton className="w-20 h-20 rounded-[20px] mb-2" />
+                                    <Skeleton className="w-16 h-3 rounded-sm" />
+                                </View>
+                            ))}
+                        </View>
                     ) : filteredBranches.length === 0 ? (
                         <Text className="text-center text-slate-500 mt-4">No branches found.</Text>
                     ) : (
@@ -325,7 +341,7 @@ export default function NewPRScreen() {
                                 <View>
                                     <Text className="text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-0.5">Repository</Text>
                                     {reposLoading ? (
-                                        <ActivityIndicator size="small" color="#64748b" />
+                                        <Skeleton className="w-32 h-5 rounded-md mt-1" />
                                     ) : (
                                         <Text className="font-bold text-slate-900 dark:text-white text-base">
                                             {selectedRepo?.full_name || 'Select a repository'}
@@ -347,7 +363,7 @@ export default function NewPRScreen() {
                                     <View className="flex-row items-center gap-1.5">
                                         <MaterialIcons name="call-split" size={14} color="#64748b" />
                                         {branchesLoading ? (
-                                            <ActivityIndicator size="small" color="#64748b" />
+                                            <Skeleton className="w-16 h-4 rounded-sm" />
                                         ) : (
                                             <Text className="text-sm font-mono font-bold text-slate-700 dark:text-slate-300" numberOfLines={1}>
                                                 {baseBranch?.name || 'none'}
@@ -371,7 +387,7 @@ export default function NewPRScreen() {
                                     <View className="flex-row items-center gap-1.5">
                                         <MaterialIcons name="call-split" size={14} color="#13ec13" />
                                         {branchesLoading ? (
-                                            <ActivityIndicator size="small" color="#13ec13" />
+                                            <Skeleton className="w-16 h-4 rounded-sm bg-primary/20 dark:bg-primary/20" />
                                         ) : (
                                             <Text className="text-sm font-mono font-bold text-primary" numberOfLines={1}>
                                                 {compareBranch?.name || 'none'}

@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { getDefaultBranch, fetchRepoTree, fetchFileContent, createStreakPR } from '../utils/github';
 import { getAIProposal } from '../utils/gemini';
 import { DiffViewer } from '../components/DiffViewer';
+import { Skeleton } from '../components/Skeleton';
 import { useColorScheme } from 'nativewind';
 import { useGithubRepos, GithubRepo } from '../hooks/useGithubRepos';
 import * as Haptics from 'expo-haptics';
@@ -246,7 +247,18 @@ export default function StreakAssistScreen() {
                             </View>
                             
                             {reposLoading ? (
-                                <ActivityIndicator size="large" color="#3fb950" className="mt-10" />
+                                <View className="space-y-3 mt-4">
+                                    {Array.from({ length: 5 }).map((_, idx) => (
+                                        <View key={idx} className="bg-white dark:bg-[#161f2e] border border-slate-200 dark:border-white/5 p-5 rounded-2xl flex-row items-center gap-4 shadow-sm">
+                                            <Skeleton className="w-10 h-10 rounded-full" />
+                                            <View className="flex-1 gap-2">
+                                                <Skeleton className="w-1/2 h-5 rounded-md" />
+                                                <Skeleton className="w-1/3 h-3 rounded-md" />
+                                            </View>
+                                            <Skeleton className="w-6 h-6 rounded-full" />
+                                        </View>
+                                    ))}
+                                </View>
                             ) : (
                                 <View className="space-y-3">
                                     {repos.map((repo: GithubRepo) => (

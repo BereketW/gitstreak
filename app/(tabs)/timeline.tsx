@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useGithubEvents, GithubEvent } from '../../hooks/useGithubEvents';
 import { formatDistanceToNow } from 'date-fns';
 import { ScreenHeader } from '../../components/ScreenHeader';
+import { Skeleton } from '../../components/Skeleton';
 
 export default function TimelineScreen() {
     const { events, loading, refreshing, refresh } = useGithubEvents();
@@ -98,9 +99,25 @@ export default function TimelineScreen() {
                 <View className="absolute left-[35px] bottom-4 w-0.5 bg-slate-200 dark:bg-white/10 rounded-full" style={{ top: Math.max(insets.top, 20) + 80 }} />
                 
                 {loading ? (
-                    <View className="py-10 items-center">
-                        <ActivityIndicator size="large" color="#13ec13" />
-                    </View>
+                    Array.from({ length: 6 }).map((_, idx) => (
+                        <View key={idx} className="relative pl-12 mb-8">
+                            <Skeleton className="absolute left-0 top-0 w-10 h-10 rounded-full" />
+                            <View className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 rounded-2xl p-4 shadow-sm mt-1">
+                                <View className="flex-row justify-between items-start mb-2">
+                                    <Skeleton className="w-3/4 h-4 rounded-md" />
+                                    <Skeleton className="w-12 h-3 rounded-md mt-1" />
+                                </View>
+                                <View className="flex-row items-center gap-2 mb-2">
+                                    <Skeleton className="w-4 h-4 rounded-md" />
+                                    <Skeleton className="w-1/3 h-3 rounded-md" />
+                                </View>
+                                <View className="bg-slate-50 dark:bg-[#161f2e] rounded-xl p-3 border border-slate-100 dark:border-white/5 mt-1">
+                                    <Skeleton className="w-full h-3 rounded-md mb-1.5" />
+                                    <Skeleton className="w-4/5 h-3 rounded-md" />
+                                </View>
+                            </View>
+                        </View>
+                    ))
                 ) : events.length === 0 ? (
                     <View className="py-10 items-center bg-white dark:bg-[#111827] rounded-3xl p-5 border border-slate-200 dark:border-white/5">
                         <Text className="text-slate-500 font-medium text-center">No recent activity found.</Text>

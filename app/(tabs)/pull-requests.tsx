@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useGithubPullRequests, GithubPR } from '../../hooks/useGithubPullRequests';
 import { formatDistanceToNow } from 'date-fns';
 import { ScreenHeader } from '../../components/ScreenHeader';
+import { Skeleton } from '../../components/Skeleton';
 
 export default function PullRequestsScreen() {
     const router = useRouter();
@@ -38,9 +39,29 @@ export default function PullRequestsScreen() {
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} tintColor="#3fb950" />}
             >
                 {loading ? (
-                    <View className="py-10 items-center">
-                        <ActivityIndicator size="large" color="#13ec13" />
-                    </View>
+                    Array.from({ length: 5 }).map((_, idx) => (
+                        <View key={idx} className="bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/5 rounded-3xl p-5 shadow-sm mb-5">
+                            <View className="flex-row items-start gap-3 mb-3">
+                                <View className="mt-1">
+                                    <Skeleton className="w-6 h-6 rounded-full" />
+                                </View>
+                                <View className="flex-1">
+                                    <View className="flex-row justify-between items-start mb-2">
+                                        <Skeleton className="w-1/3 h-3 rounded-md" />
+                                        <Skeleton className="w-1/4 h-3 rounded-md" />
+                                    </View>
+                                    <Skeleton className="w-5/6 h-5 rounded-md mb-4" />
+                                    <View className="flex-row items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4 mt-1">
+                                        <View className="flex-row items-center gap-2">
+                                            <Skeleton className="w-6 h-6 rounded-full" />
+                                            <Skeleton className="w-20 h-3 rounded-md" />
+                                        </View>
+                                        <Skeleton className="w-16 h-5 rounded-md" />
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    ))
                 ) : prs.length === 0 ? (
                     <View className="py-10 items-center">
                         <Text className="text-slate-500 font-medium">No open pull requests found.</Text>

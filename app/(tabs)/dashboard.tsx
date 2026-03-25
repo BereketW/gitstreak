@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useGithubUser } from '../../hooks/useGithubUser';
 import { useGithubContributions, ContributionDay } from '../../hooks/useGithubContributions';
 import { AnimatedNumber } from '../../components/AnimatedNumber';
+import { Skeleton } from '../../components/Skeleton';
 import * as Haptics from 'expo-haptics';
 import { useGithubEvents } from '../../hooks/useGithubEvents';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -21,8 +22,8 @@ export default function DashboardScreen() {
      
      const currentYear = new Date().getFullYear();
      const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-     const { calendar, streak, loading: calendarLoading, contributionYears, refresh: refreshContributions } = useGithubContributions(user?.login, selectedYear);
-     const { events, refresh: refreshEvents } = useGithubEvents();
+     const { calendar, streak, loading: calendarLoading, refreshing: calendarRefreshing, contributionYears, refresh: refreshContributions } = useGithubContributions(user?.login, selectedYear);
+     const { events, refreshing: eventsRefreshing, refresh: refreshEvents } = useGithubEvents();
      const [selectedDay, setSelectedDay] = useState<ContributionDay | null>(null);
      const insets = useSafeAreaInsets();
      const router = useRouter();
@@ -182,7 +183,7 @@ export default function DashboardScreen() {
                 scrollEventThrottle={16}
                 refreshControl={
                     <RefreshControl
-                        refreshing={false} // Prevent default indicator to avoid overlapping custom logic or just use boolean from hooks
+                        refreshing={calendarRefreshing || eventsRefreshing}
                         onRefresh={() => {
                             refreshContributions();
                             refreshEvents();
@@ -289,7 +290,13 @@ export default function DashboardScreen() {
                                 </View>
                                 <View className="flex-row gap-1">
                                     {calendarLoading ? (
-                                        <ActivityIndicator size="small" color="#3fb950" />
+                                        Array.from({ length: 52 }).map((_, weekIdx) => (
+                                            <View key={weekIdx} className="gap-1">
+                                                {Array.from({ length: 7 }).map((_, dayIdx) => (
+                                                    <Skeleton key={dayIdx} className="w-[11px] h-[11px] rounded-sm" />
+                                                ))}
+                                            </View>
+                                        ))
                                     ) : calendar?.weeks.map((week, weekIdx) => (
                                     <View key={weekIdx} className="gap-1">
                                         {week.contributionDays.map((day, dayIdx) => (
