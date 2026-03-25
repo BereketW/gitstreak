@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, ActivityIndicator } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useGithubEvents, GithubEvent } from '../../hooks/useGithubEvents';
 import { formatDistanceToNow } from 'date-fns';
@@ -7,6 +7,7 @@ import { ScreenHeader } from '../../components/ScreenHeader';
 
 export default function TimelineScreen() {
     const { events, loading } = useGithubEvents();
+    const insets = useSafeAreaInsets();
 
     const renderEvent = (event: GithubEvent, index: number) => {
         let icon = "commit";
@@ -22,7 +23,9 @@ export default function TimelineScreen() {
             const commitCount = event.payload.commits ? event.payload.commits.length : 0;
             const branch = event.payload.ref?.replace('refs/heads/', '') || '';
             title = `Pushed ${commitCount} commit${commitCount === 1 ? '' : 's'} to ${branch}`;
-            description = event.payload.commits?.[0]?.message || "";
+            const commits = event.payload.commits || [];
+            const latestCommit = commits.length > 0 ? commits[commits.length - 1] : null;
+            description = latestCommit?.message || "";
         } else if (event.type === "PullRequestEvent") {
             const action = event.payload.action; // opened, closed, etc.
             icon = action === 'closed' && event.payload.pull_request?.merged ? "call-merge" : "call-split";
@@ -82,12 +85,12 @@ export default function TimelineScreen() {
     };
 
     return (
-        <SafeAreaView edges={['top']} className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display text-slate-900 dark:text-slate-100">
+        <View className="flex-1 bg-background-light dark:bg-[#0a0f18] font-display text-slate-900 dark:text-slate-100">
             <ScreenHeader title="Pulse" subtitle="Your recent developer activity" />
             
-            <ScrollView contentContainerClassName="px-6 pb-32 pt-6" showsVerticalScrollIndicator={false}>
+            <ScrollView contentContainerClassName="px-6 pb-32" contentContainerStyle={{ paddingTop: Math.max(insets.top, 20) + 80 }} showsVerticalScrollIndicator={false}>
                 {/* The continuous vertical line */}
-                <View className="absolute left-[35px] top-6 bottom-4 w-0.5 bg-slate-200 dark:bg-white/10 rounded-full" />
+                <View className="absolute left-[35px] bottom-4 w-0.5 bg-slate-200 dark:bg-white/10 rounded-full" style={{ top: Math.max(insets.top, 20) + 80 }} />
                 
                 {loading ? (
                     <View className="py-10 items-center">
@@ -99,6 +102,6 @@ export default function TimelineScreen() {
                     </View>
                 ) : events.slice(0, 30).filter(e => ["PushEvent", "PullRequestEvent", "PullRequestReviewEvent", "IssuesEvent", "CreateEvent"].includes(e.type)).map(renderEvent)}
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
