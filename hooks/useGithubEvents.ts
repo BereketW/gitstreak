@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useGithubUser } from './useGithubUser';
 
@@ -23,33 +23,53 @@ export function useGithubEvents() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
+    const fetchEvents = useCallback(async () => {
         if (!token || !user?.login) return;
+        setLoading(true);
+        try {
+            const response = await fetch(`https://api.github.com/users/${user.login}/events`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/vnd.github.v3+json',
+                },
+            });
 
-        const fetchEvents = async () => {
-            try {
-                const response = await fetch(`https://api.github.com/users/${user.login}/events`, {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        Accept: 'application/vnd.github.v3+json',
-                    },
-                });
-
-                if (!response.ok) {
-                    throw new Error('Failed to fetch events');
-                }
-
-                const data = await response.json();
-                setEvents(data);
-            } catch (err: any) {
-                setError(err.message);
-            } finally {
-                setLoading(false);
+            if (!response.ok) {
+                throw new Error('Failed to fetch events');
             }
-        };
 
-        fetchEvents();
+            const data = await response.json();
+
+            // Polyfill: GitHub Events API omits `commits` when code is pushed via the Trees API (e.g Streak Assist).
+            // We manually fetch the commit using the head SHA for the most recent push to restore the commit message!
+            for (let event of data) {
+                if (event.type === 'PushEvent' && (!event.payload.commits || event.payload.commits.length === 0) && event.payload.head) {
+                    try {
+                        const commitRes = await fetch(`https://api.github.com/repos/${event.repo.name}/commits/${event.payload.head}`, {
+                            headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github.v3+json' }
+                        });
+                        if (commitRes.ok) {
+                            const commitData = await commitRes.json();
+                            event.payload.commits = [{ message: commitData.commit.message }];
+                        }
+                    } catch (e) {
+                        console.error("Polyfill fetch failed", e);
+                    }
+                    break; // Only polyfill the most recent push to conserve rate limits
+                }
+            }
+
+            setEvents(data);
+        } catch (err: any) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
     }, [token, user?.login]);
 
-    return { events, loading, error };
+    useEffect(() => {
+        fetchEvents();
+    }, [fetchEvents]);
+
+    return { events, loading, error, refresh: fetchEvents };
 }
