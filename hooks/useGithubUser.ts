@@ -69,5 +69,5 @@ export function useGithubUser() {
         fetchUser();
     }, [fetchUser]);
 
-    return { user, loading, refreshing, error, refresh: () => fetchUser(true) };
+    return { user, loading, refreshing, error, refresh: useCallback(() => fetchUser(true), [fetchUser]) };
 }

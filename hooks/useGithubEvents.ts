@@ -92,5 +92,5 @@ export function useGithubEvents() {
         fetchEvents();
     }, [fetchEvents]);
 
-    return { events, loading, refreshing, error, refresh: () => fetchEvents(true) };
+    return { events, loading, refreshing, error, refresh: useCallback(() => fetchEvents(true), [fetchEvents]) };
 }

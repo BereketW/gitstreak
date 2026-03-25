@@ -187,5 +187,5 @@ export function useGithubContributions(username?: string, year?: number) {
         fetchContributions();
     }, [fetchContributions]);
 
-    return { calendar, streak, loading, refreshing, error, contributionYears, refresh: () => fetchContributions(true) };
+    return { calendar, streak, loading, refreshing, error, contributionYears, refresh: useCallback(() => fetchContributions(true), [fetchContributions]) };
 }

@@ -71,5 +71,5 @@ export function useGithubRepos() {
         fetchRepos();
     }, [fetchRepos]);
 
-    return { repos, loading, refreshing, error, refresh: () => fetchRepos(true) };
+    return { repos, loading, refreshing, error, refresh: useCallback(() => fetchRepos(true), [fetchRepos]) };
 }

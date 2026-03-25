@@ -73,5 +73,5 @@ export function useGithubPullRequests() {
         fetchPRs();
     }, [fetchPRs]);
 
-    return { prs, loading, refreshing, error, refresh: () => fetchPRs(true) };
+    return { prs, loading, refreshing, error, refresh: useCallback(() => fetchPRs(true), [fetchPRs]) };
 }
