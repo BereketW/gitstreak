@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'nativewind';
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { ThemeProvider } from '../context/ThemeContext';
+import { NotificationProvider } from '../context/NotificationContext';
 import { useEffect } from 'react';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
@@ -46,10 +47,12 @@ export default function RootLayout() {
         <GestureHandlerRootView style={{ flex: 1 }}>
             <ThemeProvider>
                 <AuthProvider>
-                    <BottomSheetModalProvider>
-                        <RootNavigator />
-                        <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
-                    </BottomSheetModalProvider>
+                    <NotificationProvider>
+                        <BottomSheetModalProvider>
+                            <RootNavigator />
+                            <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+                        </BottomSheetModalProvider>
+                    </NotificationProvider>
                 </AuthProvider>
             </ThemeProvider>
         </GestureHandlerRootView>
