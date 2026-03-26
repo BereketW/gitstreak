@@ -1,19 +1,20 @@
 import { Feather, FontAwesome, MaterialIcons } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { FlatList, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScreenHeader } from '../../components/ScreenHeader';
 import { Skeleton } from '../../components/Skeleton';
+import { ErrorState } from '../../components/ErrorState';
 import { GithubRepo, useGithubRepos } from '../../hooks/useGithubRepos';
 
 export default function ReposScreen() {
     const router = useRouter();
-    const { repos, loading, refreshing, refresh } = useGithubRepos();
+    const { repos, loading, refreshing, refresh, error } = useGithubRepos();
     const insets = useSafeAreaInsets();
 
     const getLanguageIcon = (lang: string | null) => {
-        if (!lang) return { icon: <Feather name="code" size={24} color="#64748b" />, bg: "bg-slate-50 dark:bg-slate-800", border: "border-slate-200 dark:border-slate-700" };
+        if (!lang) return { icon: <Feather name="code" size={24} color="#64748b" />, bg: "bg-slate-50 dark:bg-surface", border: "border-slate-200 dark:border-border" };
 
         switch (lang.toLowerCase()) {
             case 'javascript':
@@ -34,7 +35,7 @@ export default function ReposScreen() {
                     <Feather name="search" size={20} color="#64748b" />
                 </View>
                 <TextInput
-                    className="w-full bg-white dark:bg-[#161f2e] border border-slate-200 dark:border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-base text-slate-900 dark:text-slate-100 shadow-sm font-medium"
+                    className="w-full bg-white dark:bg-surface border border-slate-200 dark:border-border rounded-2xl py-3.5 pl-12 pr-4 text-base text-slate-900 dark:text-text-primary shadow-sm font-medium"
                     placeholder="Find a repository..."
                     placeholderTextColor="#64748b"
                 />
@@ -45,7 +46,7 @@ export default function ReposScreen() {
     const renderSkeleton = () => (
         <View className="px-5 pb-4 space-y-4">
             {Array.from({ length: 6 }).map((_, idx) => (
-                <View key={idx} className="bg-white dark:bg-[#111827] rounded-3xl p-5 border border-slate-200 dark:border-white/5 shadow-sm mb-4">
+                <View key={idx} className="bg-white dark:bg-surface rounded-3xl p-5 border border-slate-200 dark:border-border shadow-sm mb-4">
                     <View className="flex-row items-start justify-between mb-4">
                         <View className="flex-row items-center gap-3 flex-1">
                             <Skeleton className="w-12 h-12 rounded-2xl" />
@@ -58,7 +59,7 @@ export default function ReposScreen() {
                     </View>
                     <Skeleton className="w-full h-4 rounded-md mb-2" />
                     <Skeleton className="w-5/6 h-4 rounded-md mb-4" />
-                    <View className="flex-row items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4 mt-2">
+                    <View className="flex-row items-center justify-between border-t border-slate-100 dark:border-border pt-4 mt-2">
                         <View className="flex-row items-center gap-4">
                             <Skeleton className="w-10 h-4 rounded-md" />
                             <Skeleton className="w-10 h-4 rounded-md" />
@@ -77,48 +78,49 @@ export default function ReposScreen() {
         const styling = getLanguageIcon(repo.language);
 
         return (
-            <TouchableOpacity className="bg-white dark:bg-[#111827] rounded-3xl p-5 border border-slate-200 dark:border-white/5 shadow-sm active:scale-[0.98] transition-transform mb-4 mx-5">
+            <TouchableOpacity className="bg-white dark:bg-surface rounded-3xl p-5 border border-slate-200 dark:border-border shadow-sm active:scale-[0.98] transition-transform mb-4 mx-5">
                 <View className="flex-row items-start justify-between mb-4">
                     <View className="flex-row items-center gap-3 flex-1">
                         <View className={`w-12 h-12 flex items-center justify-center rounded-2xl ${styling.bg} border ${styling.border}`}>
                             {styling.icon}
                         </View>
                         <View className="flex-1 pr-4">
-                            <Text className="text-lg font-bold text-slate-900 dark:text-white tracking-tight" numberOfLines={1}>{repo.name}</Text>
+                            <Text className="text-lg font-bold text-slate-900 dark:text-text-primary tracking-tight" numberOfLines={1}>{repo.name}</Text>
                             <Text className="text-xs text-slate-500 font-medium mt-0.5">{repo.owner.login}</Text>
                         </View>
                     </View>
-                    <View className={`${repo.private ? 'bg-primary/10 dark:bg-primary/20 border-primary/20' : 'bg-slate-50 dark:bg-[#1f2937] border-slate-200 dark:border-white/5'} px-3 py-1.5 rounded-full border`}>
-                        <Text className={`text-[10px] font-bold ${repo.private ? 'text-primary' : 'text-slate-600 dark:text-slate-300'}`}>
+                    <View className={`${repo.private ? 'bg-primary/10 dark:bg-primary/20 border-primary/20' : 'bg-slate-50 dark:bg-background-dark border-slate-200 dark:border-border'} px-3 py-1.5 rounded-full border`}>
+                        <Text className={`text-[10px] font-bold ${repo.private ? 'text-primary' : 'text-slate-600 dark:text-text-secondary'}`}>
                             {repo.private ? 'Private' : 'Public'}
                         </Text>
                     </View>
                 </View>
 
                 {repo.description && (
-                    <Text className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4" numberOfLines={2}>
+                    <Text className="text-sm text-slate-600 dark:text-text-secondary leading-relaxed mb-4" numberOfLines={2}>
                         {repo.description}
                     </Text>
                 )}
 
-                <View className="flex-row items-center justify-between border-t border-slate-100 dark:border-white/5 pt-4 mt-2">
+                <View className="flex-row items-center justify-between border-t border-slate-100 dark:border-border pt-4 mt-2">
                     <View className="flex-row items-center gap-4">
                         <View className="flex-row items-center gap-1.5">
                             <MaterialIcons name="star-border" size={16} color="#fbbf24" />
-                            <Text className="text-xs font-semibold text-slate-600 dark:text-slate-300">{repo.stargazers_count}</Text>
+                            <Text className="text-xs font-semibold text-slate-600 dark:text-text-secondary">{repo.stargazers_count}</Text>
                         </View>
                         <View className="flex-row items-center gap-1.5">
                             <MaterialIcons name="call-split" size={16} color="#3b82f6" />
-                            <Text className="text-xs font-semibold text-slate-600 dark:text-slate-300">{repo.forks_count}</Text>
+                            <Text className="text-xs font-semibold text-slate-600 dark:text-text-secondary">{repo.forks_count}</Text>
                         </View>
                     </View>
                     <View className="flex-row items-center gap-3">
-                        <Text className="text-[11px] text-slate-400 font-medium">Updated {formatDistanceToNow(new Date(repo.updated_at))} ago</Text>
+                        <Text className="text-[11px] text-slate-500 dark:text-text-secondary font-medium">Updated {formatDistanceToNow(new Date(repo.updated_at))} ago</Text>
                         <TouchableOpacity 
                             onPress={() => router.push({ pathname: '/streak-assist', params: { owner: repo.owner.login, repo: repo.name } })}
-                            className="bg-primary/10 border border-primary/20 px-3 py-1.5 rounded-full flex-row items-center gap-1 active:scale-95 transition-transform"
+                            className="bg-slate-100 dark:bg-background-dark border border-slate-200 dark:border-border px-3 py-1.5 rounded-full flex-row items-center gap-1.5 active:scale-95 transition-transform"
                         >
-                            <Text className="text-primary text-[10px] font-black uppercase tracking-wider">✨ AI Nudge</Text>
+                            <MaterialIcons name="lightbulb-outline" size={12} color="#64748b" />
+                            <Text className="text-slate-600 dark:text-text-secondary text-[10px] font-bold uppercase tracking-wider">Assist</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -130,7 +132,11 @@ export default function ReposScreen() {
         <View className="flex-1 bg-slate-50 dark:bg-background-dark font-display">
             <ScreenHeader title="Repositories" subtitle={`${loading ? '...' : repos.length} Active Projects`} />
 
-            {loading ? (
+            {error ? (
+                <View className="flex-1" style={{ paddingTop: Math.max(insets.top, 20) + 70 }}>
+                    <ErrorState message={error} onRetry={refresh} />
+                </View>
+            ) : loading ? (
                 <View>
                     {renderHeader()}
                     {renderSkeleton()}
