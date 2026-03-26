@@ -1,29 +1,33 @@
-import { View, Text, ScrollView, TouchableOpacity, Animated, ActivityIndicator, Image, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, Text, ScrollView, TouchableOpacity, Animated, Image, RefreshControl } from 'react-native';
 import { MaterialIcons, Octicons } from '@expo/vector-icons';
-import { useColorScheme } from 'nativewind';
 import { useMemo, useRef, useState, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useGithubUser } from '../../hooks/useGithubUser';
 import { useGithubContributions, ContributionDay } from '../../hooks/useGithubContributions';
 import { AnimatedNumber } from '../../components/AnimatedNumber';
 import { Skeleton } from '../../components/Skeleton';
+import { ErrorState } from '../../components/ErrorState';
 import * as Haptics from 'expo-haptics';
 import { useGithubEvents } from '../../hooks/useGithubEvents';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useTheme } from '../../context/ThemeContext';
+import { useNotifications } from '../../context/NotificationContext';
+import { NotificationDropdown } from '../../components/NotificationDropdown';
+import { LinearGradient } from 'expo-linear-gradient';
+import { usePushNotifications } from '../../hooks/usePushNotifications';
 
 export default function DashboardScreen() {
-    const { colorScheme } = useColorScheme();
-    const { toggleTheme } = useTheme();
-     const { user } = useGithubUser();
+    const { isDark, toggleTheme } = useTheme();
+    const { unreadCount, toggleDropdown } = useNotifications();
+    const { scheduleLocalNotification, isAvailable: notificationsAvailable } = usePushNotifications();
+    const { user, error: userError } = useGithubUser();
     const { logout } = useAuth();
      
      const currentYear = new Date().getFullYear();
      const [selectedYear, setSelectedYear] = useState<number>(currentYear);
-     const { calendar, streak, loading: calendarLoading, refreshing: calendarRefreshing, contributionYears, refresh: refreshContributions } = useGithubContributions(user?.login, selectedYear);
-     const { events, refreshing: eventsRefreshing, refresh: refreshEvents } = useGithubEvents();
+     const { calendar, streak, loading: calendarLoading, refreshing: calendarRefreshing, contributionYears, refresh: refreshContributions, error: calendarError } = useGithubContributions(user?.login, selectedYear);
+     const { events, refreshing: eventsRefreshing, refresh: refreshEvents, error: eventsError } = useGithubEvents();
      const [selectedDay, setSelectedDay] = useState<ContributionDay | null>(null);
      const insets = useSafeAreaInsets();
      const router = useRouter();
@@ -127,6 +131,19 @@ export default function DashboardScreen() {
         extrapolate: 'clamp',
     });
 
+    if (userError || calendarError || eventsError) {
+        const errorMessage = userError || calendarError || eventsError;
+        return (
+            <ErrorState 
+                message={errorMessage || 'Failed to load dashboard data'} 
+                onRetry={() => {
+                    refreshContributions();
+                    refreshEvents();
+                }} 
+            />
+        );
+    }
+
     return (
         <View className="flex-1 bg-slate-50 dark:bg-background-dark font-sans">
             <Animated.View 
@@ -136,7 +153,7 @@ export default function DashboardScreen() {
                 <View className="flex-row items-center gap-3">
                     <TouchableOpacity onPress={logout} className="w-10 h-10 rounded-full border-2 border-slate-200 dark:border-border overflow-hidden bg-white dark:bg-surface">
                         {user?.avatar_url ? (
-                            <Image source={{ uri: user.avatar_url }} className="w-full h-full" />
+                            <Image source={{ uri: `${user.avatar_url}&size=80` }} className="w-full h-full" />
                         ) : (
                             <MaterialIcons name="person" size={20} color="#8b949e" />
                         )}
@@ -164,14 +181,34 @@ export default function DashboardScreen() {
                         className="relative p-2.5 rounded-full bg-white dark:bg-surface shadow-sm border border-slate-200 dark:border-border active:scale-95"
                     >
                         <MaterialIcons 
-                            name={colorScheme === 'dark' ? 'light-mode' : 'dark-mode'} 
+                            name={isDark ? 'light-mode' : 'dark-mode'} 
                             size={20} 
-                            color={colorScheme === 'dark' ? '#fde047' : '#8b949e'} 
+                            color={isDark ? '#fde047' : '#8b949e'} 
                         />
                     </TouchableOpacity>
-                    <TouchableOpacity className="relative p-2.5 rounded-full bg-white dark:bg-surface shadow-sm border border-slate-200 dark:border-border active:scale-95">
-                        <MaterialIcons name="notifications" size={20} color="#8b949e" />
-                        <View className="absolute top-2.5 right-2.5 w-2 h-2 bg-primary rounded-full shadow-sm shadow-primary/50"></View>
+                    <TouchableOpacity 
+                        onPress={toggleDropdown}
+                        onLongPress={async () => {
+                            if (notificationsAvailable) {
+                                await scheduleLocalNotification({
+                                    title: '🔥 Streak Alert!',
+                                    body: "You haven't committed in 20 hours. Keep your streak alive!",
+                                    data: { type: 'streak', screen: 'streak-assist' },
+                                    type: 'streak',
+                                });
+                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                            } else {
+                                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+                            }
+                        }}
+                        className="relative p-2.5 rounded-full bg-white dark:bg-surface shadow-sm border border-slate-200 dark:border-border active:scale-95"
+                    >
+                        <MaterialIcons name="notifications" size={20} color={unreadCount > 0 ? "#3fb950" : "#8b949e"} />
+                        {unreadCount > 0 && (
+                            <View className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-primary rounded-full items-center justify-center px-1 shadow-sm shadow-primary/50">
+                                <Text className="text-[9px] font-bold text-white">{unreadCount > 9 ? '9+' : unreadCount}</Text>
+                            </View>
+                        )}
                     </TouchableOpacity>
                 </View>
             </Animated.View>
@@ -188,51 +225,110 @@ export default function DashboardScreen() {
                             refreshContributions();
                             refreshEvents();
                         }}
-                        tintColor={colorScheme === 'dark' ? '#3fb950' : '#3fb950'}
+                        tintColor={isDark ? '#3fb950' : '#3fb950'}
                     />
                 }
             >
-                <View className={`p-6 mb-8 overflow-hidden shadow-2xl relative ${isGamified ? 'rounded-tl-[32px] rounded-br-[32px] rounded-tr-xl rounded-bl-xl border-2 border-yellow-400 dark:border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 shadow-yellow-500/30' : 'rounded-2xl bg-white dark:bg-surface border border-slate-200 dark:border-border'}`}>
-                    <View className={`absolute inset-0 ${isGamified ? 'bg-yellow-400/10 dark:bg-yellow-500/10' : 'bg-green-50 dark:bg-[#0d2b0d]'}`} />
-                    <View className="flex-row justify-between items-start z-10">
-                        <View>
-                            <View className="flex-row items-center gap-2 mb-1">
-                                <Text className="text-3xl">🔥</Text>
-                                <AnimatedNumber 
-                                    value={calendarLoading ? 0 : displayStreakCurrent} 
-                                    style={{ fontSize: 52, fontWeight: 'bold', color: colorScheme === 'dark' ? '#e6edf3' : '#0f172a', fontFamily: 'JetBrainsMono-Bold' }} 
-                                />
+                {/* ── Vibrant Streak Card ── */}
+                <TouchableOpacity 
+                    activeOpacity={0.9}
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        router.push('/streak-assist');
+                    }}
+                    className="mb-8 rounded-3xl overflow-hidden shadow-2xl"
+                    style={{ shadowColor: '#3fb950', shadowOpacity: 0.35, shadowRadius: 20, shadowOffset: { width: 0, height: 8 } }}
+                >
+                    <LinearGradient
+                        colors={isDark 
+                            ? ['#0a3d1a', '#166534', '#15803d', '#0a3d1a'] 
+                            : ['#16a34a', '#22c55e', '#4ade80', '#16a34a']}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        className="p-6 pb-5"
+                    >
+                        {/* Lightning Bolt Hero */}
+                        <View className="items-center mb-1">
+                            <View className="w-20 h-20 items-center justify-center mb-3">
+                                <View className="absolute w-16 h-16 rounded-full bg-white/20" style={{ shadowColor: '#fff', shadowOpacity: 0.5, shadowRadius: 20, shadowOffset: { width: 0, height: 0 } }} />
+                                <MaterialIcons name="bolt" size={52} color="rgba(255,255,255,0.9)" />
                             </View>
-                            <Text className="text-primary font-bold text-[11px] uppercase tracking-widest pl-1">day streak</Text>
-                        </View>
-                        <View className="items-end gap-1.5 mt-1">
-                            <View className="bg-slate-100 dark:bg-background-dark/30 px-3 py-1 rounded-full border border-slate-200 dark:border-white/5">
-                                <Text className="text-[10px] text-slate-500 dark:text-text-secondary uppercase tracking-widest font-bold">Best: {displayStreakLongest}</Text>
-                            </View>
-                            <View className="bg-slate-100 dark:bg-background-dark/30 px-3 py-1 rounded-full border border-slate-200 dark:border-white/5">
-                                <Text className="text-[10px] text-slate-500 dark:text-text-secondary uppercase tracking-widest font-bold text-center">
-                                    Today: <Text className="text-slate-700 dark:text-white">{todayContributions}</Text>  /  High: <Text className="text-slate-700 dark:text-white">{maxDailyContributions}</Text>
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-                    <View className="mt-6 pt-4 border-t border-slate-200 dark:border-white/10 flex-col gap-3">
-                        <View className="flex-row items-center gap-2">
-                            <View className={`w-2 h-2 rounded-full ${displayStreakToday ? 'bg-[#3fb950]' : 'bg-warning'}`} />
-                            <Text className="text-[12px] text-slate-800 dark:text-text-primary font-medium">
-                                {displayStreakToday ? "● Committed today · You're safe" : "⚠ Today's commit missing"}
+                            
+                            {/* Streak Count */}
+                            <Text className="text-white text-4xl font-black tracking-tight mb-1" style={{ textShadowColor: 'rgba(0,0,0,0.15)', textShadowRadius: 8 }}>
+                                {calendarLoading ? '...' : displayStreakCurrent} {displayStreakCurrent === 1 ? 'Day' : 'Days'} Streak
+                            </Text>
+                            <Text className="text-white/80 text-sm font-medium text-center mb-5">
+                                {displayStreakCurrent === 0 
+                                    ? "Start your streak today — make a commit!" 
+                                    : displayStreakCurrent < 3 
+                                        ? `Nice start, keep pushing, ${user?.login || 'dev'}!`
+                                        : displayStreakCurrent < 7
+                                            ? `You're doing great, on fire, ${user?.login || 'dev'}!`
+                                            : `Unstoppable! ${displayStreakCurrent} days strong 💪`}
                             </Text>
                         </View>
-                        {latestCommitToday && (
-                            <View className="flex-row items-start gap-2 bg-white/50 dark:bg-black/20 p-2.5 rounded-lg border border-slate-100 dark:border-white/5">
-                                <Octicons name="git-commit" size={14} color={colorScheme === 'dark' ? '#8b949e' : '#64748b'} className="mt-0.5" />
-                                <Text className="text-[11px] text-slate-600 dark:text-slate-300 font-medium flex-1" numberOfLines={2}>
-                                    Latest: {latestCommitToday}
-                                </Text>
+
+                        {/* Weekly Day Tracker */}
+                        <View className="bg-white/15 rounded-2xl px-4 py-3 mb-3" style={{ backdropFilter: 'blur(20px)' }}>
+                            <View className="flex-row justify-between items-center">
+                                {(() => {
+                                    const today = new Date();
+                                    const todayDow = today.getDay(); // 0=Sun
+                                    const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+                                    
+                                    // Build Mon–Sun of the current week
+                                    // Monday offset: if today is Sunday (0), Monday was 6 days ago; otherwise (todayDow - 1) days ago
+                                    const mondayOffset = todayDow === 0 ? 6 : todayDow - 1;
+                                    const weekDays = [];
+                                    for (let i = 0; i < 7; i++) {
+                                        const d = new Date(today);
+                                        d.setDate(today.getDate() - mondayOffset + i);
+                                        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                                        const dayName = days[i];
+                                        const isToday = d.toDateString() === today.toDateString();
+                                        const isFuture = d > today && !isToday;
+                                        
+                                        let hasContribution = false;
+                                        if (!isFuture && calendar) {
+                                            const found = calendar.weeks.flatMap(w => w.contributionDays).find(cd => cd.date === dateStr);
+                                            if (found && found.contributionCount > 0) hasContribution = true;
+                                        }
+                                        if (isToday && todayContributions > 0) hasContribution = true;
+                                        
+                                        weekDays.push({ dayName, isToday, isFuture, hasContribution, dateStr });
+                                    }
+                                    
+                                    return weekDays.map((day, idx) => (
+                                        <View key={idx} className="items-center gap-1.5">
+                                            <View className={`w-9 h-9 rounded-full items-center justify-center ${day.isToday ? 'bg-white/25 border-2 border-white/50' : ''}`}>
+                                                {day.isToday ? (
+                                                    <Text className="text-base">🔥</Text>
+                                                ) : day.hasContribution ? (
+                                                    <View className="w-7 h-7 rounded-full bg-white/30 items-center justify-center">
+                                                        <MaterialIcons name="check" size={16} color="white" />
+                                                    </View>
+                                                ) : (
+                                                    <View className={`w-7 h-7 rounded-full border-2 ${day.isFuture ? 'border-white/15' : 'border-white/25'}`} />
+                                                )}
+                                            </View>
+                                            <Text className={`text-[10px] font-bold ${day.isToday ? 'text-white' : day.isFuture ? 'text-white/40' : 'text-green-100'}`}>{day.dayName}</Text>
+                                        </View>
+                                    ));
+                                })()}
                             </View>
-                        )}
-                    </View>
-                </View>
+                        </View>
+
+                        {/* See Details */}
+                        <View className="items-center mt-1">
+                            <View className="flex-row items-center gap-1">
+                                <Text className="text-white/70 text-sm font-semibold">See Details</Text>
+                                <MaterialIcons name="chevron-right" size={18} color="rgba(255,255,255,0.7)" />
+                            </View>
+                        </View>
+                    </LinearGradient>
+                </TouchableOpacity>
+
 
                 <View className="flex-row gap-3 mb-8">
                     {[
@@ -241,7 +337,7 @@ export default function DashboardScreen() {
                         { label: 'followers', val: user?.followers || 0, icon: 'people' }
                     ].map((item, i) => (
                         <TouchableOpacity key={i} onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)} className="flex-1 bg-white dark:bg-surface border border-slate-200 dark:border-border rounded-xl p-4 items-center">
-                            <Octicons name={item.icon as any} size={16} color={item.val > 0 ? (colorScheme === 'dark' ? '#e6edf3' : '#0f172a') : '#6e7681'} />
+                            <Octicons name={item.icon as any} size={16} color={item.val > 0 ? (isDark ? '#e6edf3' : '#0f172a') : '#6e7681'} />
                             <Text className={`font-mono text-xl font-bold mt-2 ${item.val > 0 ? 'text-slate-900 dark:text-text-primary' : 'text-slate-400 dark:text-broken'}`}>{item.val}</Text>
                             <Text className="text-[10px] text-slate-500 dark:text-text-secondary uppercase">{item.label}</Text>
                         </TouchableOpacity>
@@ -319,6 +415,8 @@ export default function DashboardScreen() {
                     </View>
                 </View>
             </ScrollView>
+
+            <NotificationDropdown />
         </View>
     );
 }
