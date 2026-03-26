@@ -1,47 +1,45 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { Appearance } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
-import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
+
+type Theme = 'light' | 'dark';
 
 type ThemeContextType = {
-    theme: 'light' | 'dark' | 'system';
-    setTheme: (theme: 'light' | 'dark' | 'system') => void;
+    theme: Theme;
+    isDark: boolean;
     toggleTheme: () => void;
+    setTheme: (theme: Theme) => void;
 };
 
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-    const { colorScheme, setColorScheme } = useNativeWindColorScheme();
-    const [theme, setThemeState] = useState<'light' | 'dark' | 'system'>('system');
+    const [theme, setThemeState] = useState<Theme>('light');
 
     useEffect(() => {
         SecureStore.getItemAsync('app_theme').then(savedTheme => {
-            if (savedTheme === 'light' || savedTheme === 'dark' || savedTheme === 'system') {
+            if (savedTheme === 'light' || savedTheme === 'dark') {
+                Appearance.setColorScheme(savedTheme);
                 setThemeState(savedTheme);
-                if (savedTheme !== 'system') {
-                    setColorScheme(savedTheme);
-                }
             }
         });
-    }, [setColorScheme]);
+    }, []);
 
-    const setTheme = async (newTheme: 'light' | 'dark' | 'system') => {
+    const setTheme = useCallback(async (newTheme: Theme) => {
+        Appearance.setColorScheme(newTheme);
         setThemeState(newTheme);
         await SecureStore.setItemAsync('app_theme', newTheme);
-        if (newTheme !== 'system') {
-            setColorScheme(newTheme);
-        } else {
-            setColorScheme('system');
-        }
-    };
+    }, []);
 
-    const toggleTheme = () => {
-        const nextTheme = colorScheme === 'dark' ? 'light' : 'dark';
+    const toggleTheme = useCallback(() => {
+        const nextTheme = Appearance.getColorScheme() === 'dark' ? 'light' : 'dark';
         setTheme(nextTheme);
-    };
+    }, [setTheme]);
+
+    const isDark = theme === 'dark';
 
     return (
-        <ThemeContext.Provider value={{ theme, setTheme, toggleTheme }}>
+        <ThemeContext.Provider value={{ theme, isDark, toggleTheme, setTheme }}>
             {children}
         </ThemeContext.Provider>
     );
