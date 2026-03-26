@@ -1,15 +1,16 @@
 import { View, Text, ScrollView, TouchableOpacity, Image, FlatList } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useGithubPullRequests, GithubPR } from '../../hooks/useGithubPullRequests';
 import { formatDistanceToNow } from 'date-fns';
 import { ScreenHeader } from '../../components/ScreenHeader';
 import { Skeleton } from '../../components/Skeleton';
+import { ErrorState } from '../../components/ErrorState';
 
 export default function PullRequestsScreen() {
     const router = useRouter();
-    const { prs, loading, refreshing, refresh } = useGithubPullRequests();
+    const { prs, loading, refreshing, refresh, error } = useGithubPullRequests();
     const insets = useSafeAreaInsets();
 
     const getRepoName = (url: string) => {
@@ -88,7 +89,7 @@ export default function PullRequestsScreen() {
                             <View className="flex-row items-center gap-2">
                                 <View className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 items-center justify-center overflow-hidden">
                                     {pr.user.avatar_url ? (
-                                        <Image source={{ uri: pr.user.avatar_url }} className="w-full h-full" />
+                                        <Image source={{ uri: `${pr.user.avatar_url}&size=80` }} className="w-full h-full" />
                                     ) : (
                                         <Text className="text-[10px] font-bold text-slate-600 dark:text-slate-300">{pr.user.login.substring(0,2).toUpperCase()}</Text>
                                     )}
@@ -115,7 +116,11 @@ export default function PullRequestsScreen() {
         <View className="flex-1 bg-slate-50 dark:bg-background-dark font-display">
             <ScreenHeader title="Pull Requests" subtitle={`${loading ? '...' : prs.length} Open`} />
 
-            {loading ? (
+            {error ? (
+                <View className="flex-1" style={{ paddingTop: Math.max(insets.top, 20) + 70 }}>
+                    <ErrorState message={error} onRetry={refresh} />
+                </View>
+            ) : loading ? (
                 <View>
                     {renderHeader()}
                     {renderSkeleton()}
