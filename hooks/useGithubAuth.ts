@@ -18,10 +18,19 @@ export function useGithubAuth() {
     const { login } = useAuth();
 
     // Scheme must match the scheme inside app.json
+    // Log the redirect URI so it shows in the terminal
+
     const redirectUri = makeRedirectUri({
         scheme: 'gitpush',
         preferLocalhost: false, // Set to false so it uses the actual Metro IP (e.g. exp://192.168.x.x:8081)
     });
+
+    useEffect(() => {
+        console.log('\n=============================================');
+        console.log('🔗 YOUR GITHUB REDIRECT URL IS:');
+        console.log(redirectUri);
+        console.log('=============================================\n');
+    }, [redirectUri]);
 
     const [request, response, promptAsync] = useAuthRequest(
         {
