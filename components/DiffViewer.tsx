@@ -3,35 +3,46 @@ import { View, Text, ScrollView } from 'react-native';
 export function DiffViewer({ diffText }: { diffText: string }) {
     if (!diffText) return null;
     
-    const lines = diffText.split('\n');
+    // Auto-trim trailing empty lines from LLM response
+    const lines = diffText.split('\n').filter((l, i, arr) => !(i === arr.length - 1 && l.trim() === ''));
 
     return (
-        <ScrollView horizontal className="bg-slate-900 dark:bg-black rounded-xl p-4 mt-4 border border-slate-800 dark:border-white/10 shadow-lg" showsHorizontalScrollIndicator={false}>
-            <View>
+        <ScrollView 
+            horizontal 
+            className="bg-[#0a0f18] dark:bg-black rounded-b-2xl p-4 shadow-inner" 
+            showsHorizontalScrollIndicator={false}
+        >
+            <View className="pb-2">
                 {lines.map((line, idx) => {
-                    let bgColor = 'bg-transparent';
-                    let textColor = 'text-slate-300';
-                    let prefixColor = 'text-slate-500';
-
-                    if (line.startsWith('+') && !line.startsWith('+++')) {
-                        bgColor = 'bg-green-900/40';
-                        textColor = 'text-green-400';
-                        prefixColor = 'text-green-500';
-                    } else if (line.startsWith('-') && !line.startsWith('---')) {
-                        bgColor = 'bg-red-900/40';
-                        textColor = 'text-red-400';
-                        prefixColor = 'text-red-500';
-                    } else if (line.startsWith('@@') || line.startsWith('---') || line.startsWith('+++')) {
-                        textColor = 'text-blue-400';
-                        prefixColor = 'text-blue-400';
-                    }
+                    const isAddition = line.startsWith('+') && !line.startsWith('+++');
+                    const isDeletion = line.startsWith('-') && !line.startsWith('---');
+                    const isMetadata = line.startsWith('@@') || line.startsWith('---') || line.startsWith('+++');
 
                     return (
-                        <View key={idx} className={`flex-row ${bgColor} px-2 py-0.5 rounded-sm`}>
-                            <Text className={`font-mono text-[10px] w-6 text-right mr-3 ${prefixColor}`}>
+                        <View 
+                            key={idx} 
+                            className={`flex-row items-center px-3 py-[3px] my-[1px] rounded-lg ${
+                                isAddition ? 'bg-[#122d1b] border border-[#1e4a2c]' : 
+                                isDeletion ? 'bg-[#311116] border border-[#521c25]' : 
+                                'bg-transparent border border-transparent'
+                            }`}
+                        >
+                            <Text 
+                                className={`font-mono text-[10px] w-6 text-right mr-4 select-none ${
+                                    isMetadata ? 'text-blue-500/70' : 'text-slate-600 dark:text-slate-500'
+                                }`}
+                            >
                                 {idx + 1}
                             </Text>
-                            <Text className={`font-mono text-[11px] ${textColor}`}>
+                            
+                            <Text 
+                                className={`font-mono text-[12px] tracking-tight ${
+                                    isAddition ? 'text-[#4bd964]' : 
+                                    isDeletion ? 'text-[#ff3b30]' : 
+                                    isMetadata ? 'text-blue-400 font-bold opacity-80' : 
+                                    'text-slate-300 dark:text-slate-400'
+                                }`}
+                            >
                                 {line}
                             </Text>
                         </View>
