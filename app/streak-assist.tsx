@@ -463,3 +463,4 @@ export default function StreakAssist() {
         </Animated.View>
     );
 }
+// spatial UI bounds limits
