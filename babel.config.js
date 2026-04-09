@@ -1,4 +1,4 @@
-module.exports = function (api) {
+module.exports = (api) => {
     api.cache(true);
     const plugins = [];
     if (process.env.NODE_ENV === 'production' || process.env.BABEL_ENV === 'production') {
